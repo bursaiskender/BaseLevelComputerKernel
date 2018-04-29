@@ -1,12 +1,15 @@
 sysinfo_command:
     push rbp
     mov rbp, rsp
-    sub rsp, 16
+    sub rsp, 20
 
     push rax
     push rbx
     push rcx
     push rdx
+    push r10
+
+    ; Vendor ID
 
     mov r8, sysinfo_vendor_id
     mov r9, sysinfo_vendor_id_length
@@ -23,12 +26,41 @@ sysinfo_command:
     mov rbx, rsp
     mov dl, STYLE(BLACK_F, WHITE_B)
     call print_string
+    call goto_next_line
+
+    ; CPU Brand String
+
+    mov r8, sysinfo_cpu_brand
+    mov r9, sysinfo_cpu_brand_length
+    call print_normal
+
+    xor r10, r10
+
+    .next:
+    mov rax, 0x80000002
+    add rax, r10
+    cpuid
+
+    mov [rsp+0], eax
+    mov [rsp+4], ebx
+    mov [rsp+8], ecx
+    mov [rsp+12], edx
+
+    mov r8, rsp
+    mov r9, 16
+    call print_normal
+
+    inc r10
+    cmp r10, 3
+    jne .next
 
     call goto_next_line
+
+    ; Stepping
+
     mov r8, sysinfo_stepping
     mov r9, sysinfo_stepping_length
     call print_normal
-    
 
     mov eax, 1
     cpuid
@@ -47,15 +79,19 @@ sysinfo_command:
     mov r9, sysinfo_model_length
     call print_normal
 
+    ; model id
     mov r14, r15
     and r14, 0xF0
 
+    ; family id
     mov r13, r15
     and r13, 0xF00
 
+    ; extended model id
     mov r12, r15
     and r12, 0xF0000
 
+    ; extended family id
     mov r11, r15
     and r11, 0xFF00000
 
@@ -139,7 +175,7 @@ sysinfo_command:
     mov r8, sysinfo_sse3
     mov r9, sysinfo_sse3_length
     call print_normal
-    
+
     .sse4_1:
 
     mov r15, rcx
@@ -150,29 +186,96 @@ sysinfo_command:
     mov r8, sysinfo_sse4_1
     mov r9, sysinfo_sse4_1_length
     call print_normal
-    
+
     .sse4_2:
 
     mov r15, rcx
     and r15, 1 << 20
     cmp r15, 0
-    je .last
+    je .frequency
 
     mov r8, sysinfo_sse4_2
     mov r9, sysinfo_sse4_2_length
     call print_normal
-    
+
+    .frequency:
+
+    call goto_next_line
+
+    mov r8, sysinfo_max_frequency
+    mov r9, sysinfo_max_frequency_length
+    call print_normal
+
+    mov eax, 0x80000004
+    cpuid
+
+    mov [rsp+0], eax
+    mov [rsp+4], ebx
+    mov [rsp+8], ecx
+    mov [rsp+12], edx
+
+    mov rax, rsp
+
+    .next_char:
+        mov bl, [rax]
+        inc rax
+        cmp bl, 0
+        jne .next_char
+
+    xor rbx, rbx
+    xor rcx, rcx
+
+    mov cl, [rax - 5]
+    sub rcx, 48
+    imul rcx, 10
+    add rbx, rcx
+
+    mov cl, [rax - 6]
+    sub rcx, 48
+    imul rcx, 100
+    add rbx, rcx
+
+    movzx rcx, byte [rax - 8]
+    sub rcx, 48
+    imul rcx, 1000
+    add rbx, rcx
+
+    call set_current_position
+    mov r8, rbx
+    mov dl, STYLE(BLACK_F, WHITE_B)
+    call print_int
+
+    call goto_next_line
+
+    mov r8, sysinfo_current_frequency
+    mov r9, sysinfo_current_frequency_length
+    call print_normal
+
+    ; rbx = max_frequency
+
+    xor rax, rax
+    mov ax, cs
+    and ax, 11b
+
+    cmp ax, 0
+    jne .last
+
+    ; read MPERF
+    mov ecx, 0xe7
+    rdmsr
+
     .last:
 
+    pop r10
     pop rdx
     pop rcx
     pop rbx
     pop rax
 
-    sub rsp, 16
+    sub rsp, 20
     leave
     ret
-
+    
 reboot_command:
     in al, 0x64
     or al, 0xFE
@@ -292,6 +395,9 @@ STRING sysinfo_sse3, "sse3 "
 STRING sysinfo_sse4_1, "sse4_1 "
 STRING sysinfo_sse4_2, "sse4_2 "
 STRING sysinfo_ht, "ht "
+STRING sysinfo_cpu_brand, "CPU Brand: "
+STRING sysinfo_max_frequency, "Max Frequency: "
+STRING sysinfo_current_frequency, "Current Frequency: "
 STRING devinfo_author, "Batuhan Osman Taskaya - @BTaskaya on github -"
 STRING devinfo_repo, "github.com/BaLeCoK/BaseLevelComputerKernel"
 STRING available_commands, "Available commands: "
