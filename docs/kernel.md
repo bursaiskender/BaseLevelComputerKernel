@@ -11,5 +11,5 @@ prints kernel headers
 make a fucking infinte loop
 ### defineds
 kernel_header_* = for loading screen 
-### sector part
+### Boot Sector
 fills the sector
