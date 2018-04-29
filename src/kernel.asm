@@ -261,7 +261,27 @@ clear_screen:
     PRINT_NORMAL command_line, command_line_length
     
     ret
+    
+print_normal:
+    push rax
+    push rbx
+    push rdx
+    push rdi
 
+    call set_current_position
+    mov rbx, r8
+    mov dl, STYLE(BLACK_F, WHITE_B)
+    call print_string
+
+    mov rax, [current_column]
+    add rax, r9
+    mov [current_column], rax
+
+    pop rdi
+    pop rdx
+    pop rbx
+    pop rax
+    
 print_string:
     push rax
 
