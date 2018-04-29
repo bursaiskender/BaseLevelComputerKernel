@@ -238,7 +238,7 @@ lm_start:
 
             call set_current_position
             PRINT_P command_line, BLACK_F, WHITE_B
-            mov qword [current_column], 6
+            mov qword [current_column], 15
 
             jmp .start_waiting
 
@@ -393,10 +393,155 @@ int_str_length:
 
         ret
         
+
 sysinfo_command:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16
+
+    push rax
+    push rbx
+    push rcx
+    push rdx
+
+    PRINT_NORMAL sysinfo_vendor_id, sysinfo_vendor_id_length
+
+    xor eax, eax
+    cpuid
+
+    mov [rsp+0], ebx
+    mov [rsp+4], edx
+    mov [rsp+8], ecx
+
     call set_current_position
-    PRINT_P sysinfo_command_str, BLACK_F, WHITE_B
-    
+    mov rbx, rsp
+    mov dl, STYLE(BLACK_F, WHITE_B)
+    call print_string
+
+    GO_TO_NEXT_LINE
+    PRINT_NORMAL sysinfo_stepping, sysinfo_stepping_length
+
+    mov eax, 1
+    cpuid
+
+    mov r15, rax
+
+    mov r8, r15
+    and r8, 0xF
+
+    call set_current_position
+    mov dl, STYLE(BLACK_F, WHITE_B)
+    call print_int
+
+    GO_TO_NEXT_LINE
+    PRINT_NORMAL sysinfo_model, sysinfo_model_length
+
+    mov r14, r15
+    and r14, 0xF0
+
+    mov r13, r15
+    and r13, 0xF00
+
+    mov r12, r15
+    and r12, 0xF0000
+
+    mov r11, r15
+    and r11, 0xFF00000
+
+    shl r12, 4
+    mov r8, r14
+    add r8, r12
+    call set_current_position
+    mov dl, STYLE(BLACK_F, WHITE_B)
+    call print_int
+
+    GO_TO_NEXT_LINE
+    PRINT_NORMAL sysinfo_family, sysinfo_family_length
+
+    mov r8, r13
+    add r8, r11
+    call set_current_position
+    mov dl, STYLE(BLACK_F, WHITE_B)
+    call print_int
+
+    GO_TO_NEXT_LINE
+    PRINT_NORMAL sysinfo_features, sysinfo_features_length
+
+    mov eax, 1
+    cpuid
+
+    .mmx:
+
+    mov r15, rdx
+    and r15, 1 << 23
+    cmp r15, 0
+    je .sse
+
+    PRINT_NORMAL sysinfo_mmx, sysinfo_mmx_length
+
+    .sse:
+
+    mov r15, rdx
+    and r15, 1 << 25
+    cmp r15, 0
+    je .sse2
+
+    PRINT_NORMAL sysinfo_sse, sysinfo_sse_length
+
+    .sse2:
+
+    mov r15, rdx
+    and r15, 1 << 26
+    cmp r15, 0
+    je .ht
+
+    PRINT_NORMAL sysinfo_sse2, sysinfo_sse2_length
+
+    .ht:
+
+    mov r15, rdx
+    and r15, 1 << 28
+    cmp r15, 0
+    je .sse3
+
+    PRINT_NORMAL sysinfo_ht, sysinfo_ht_length
+
+    .sse3:
+
+    mov r15, rcx
+    and r15, 1 << 9
+    cmp r15, 0
+    je .sse4_1
+
+    PRINT_NORMAL sysinfo_sse3, sysinfo_sse3_length
+
+    .sse4_1:
+
+    mov r15, rcx
+    and r15, 1 << 19
+    cmp r15, 0
+    je .sse4_2
+
+    PRINT_NORMAL sysinfo_sse4_1, sysinfo_sse4_1_length
+
+    .sse4_2:
+
+    mov r15, rcx
+    and r15, 1 << 20
+    cmp r15, 0
+    je .last
+
+    PRINT_NORMAL sysinfo_sse4_2, sysinfo_sse4_2_length
+
+    .last:
+
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+
+    sub rsp, 16
+    leave
     ret
 
 reboot_command:
