@@ -289,7 +289,83 @@ print_string:
     pop rax
 
     ret
+    
+print_int:
+    push rax
+    push rbx
+    push rdx
+    push r10
+    push rsi
 
+    mov rax, r8
+    mov r10, rdx
+
+    xor rsi, rsi
+
+    .loop:
+        xor rdx, rdx
+        mov rbx, 10
+        div rbx
+        add rdx, 48
+
+        push rdx
+        inc rsi
+
+        cmp rax, 0
+        jne .loop
+
+    .next:
+        cmp rsi, 0
+        je .exit
+        dec rsi
+
+        pop rax
+        stosb
+
+        mov rdx, r10
+        mov al, dl
+        stosb
+
+        jmp .next
+
+    .exit:
+        pop rsi
+        pop r10
+        pop rdx
+        pop rbx
+        pop rax
+
+        ret
+
+int_str_length:
+    push rbx
+    push rdx
+    push rsi
+
+    mov rax, r8
+
+    xor rsi, rsi
+
+    .loop:
+        xor rdx, rdx
+        mov rbx, 10
+        div rbx
+        add rdx, 48
+
+        inc rsi
+
+        cmp rax, 0
+        jne .loop
+
+    .exit:
+        mov rax, rsi
+
+        pop rsi
+        pop rdx
+        pop rbx
+
+        ret
+        
 sysinfo_command:
     call set_current_position
     PRINT_P sysinfo_command_str, BLACK_F, WHITE_B
