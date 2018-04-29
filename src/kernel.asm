@@ -1,6 +1,8 @@
-jmp _start
-
 [BITS 16]
+
+jmp _start 
+
+%include "src/utils/intel_16.asm" ; Include common functions
 
 _start:
     mov ax, 0x9000
@@ -24,34 +26,7 @@ _start:
     call new_line_16
 
     jmp $
-
-
-new_line_16:
-    mov ah, 0Eh
-
-    mov al, 0Ah
-    int 10h
-
-    mov al, 0Dh
-    int 10h
-
-    ret
-
-print_line_16:
-    mov ah, 0Eh
-
-.repeat:
-    lodsb
-    cmp al, 0
-    je .done
-    int 10h
-    jmp .repeat
-
-.done:
-    call new_line_16
-
-    ret
-
+    
     ; Defines
 
     kernel_header_0 db 'BaLeCoK -> Base Level Computer Kernel', 0
