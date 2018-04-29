@@ -433,6 +433,18 @@ command_table:
     unknown_command_str_1 db 'The command "', 0
     unknown_command_length_1 equ $ - unknown_command_str_1 - 1
     unknown_command_str_2 db '" does not exist', 0
+    STRING sysinfo_vendor_id, "Vendor ID: "
+    STRING sysinfo_stepping, "Stepping: "
+    STRING sysinfo_model, "Model: "
+    STRING sysinfo_family, "Family: "
+    STRING sysinfo_features, "Features: "
+    STRING sysinfo_mmx, "mmx "
+    STRING sysinfo_sse, "sse "
+    STRING sysinfo_sse2, "sse2 "
+    STRING sysinfo_sse3, "sse3 "
+    STRING sysinfo_sse4_1, "sse4_1 "
+    STRING sysinfo_sse4_2, "sse4_2 "
+    STRING sysinfo_ht, "ht "
     TRAM equ 0x0B8000
     VRAM equ 0x0A0000
 
@@ -474,4 +486,4 @@ GDT64:
    GDT_LENGTH:
 
    ; Boot Sector
-   times 2048-($-$$) db 0
+   times 4196-($-$$) db 0
