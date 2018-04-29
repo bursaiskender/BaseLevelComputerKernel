@@ -37,6 +37,25 @@ jmp _start
     call print_string
 %endmacro
 
+%macro PRINT_NORMAL 2
+    call set_current_position
+    mov rbx, %1
+    mov dl, STYLE(BLACK_F, WHITE_B)
+    call print_string
+
+    mov rax, [current_column]
+    add rax, %2
+    mov [current_column], rax
+%endmacro
+
+%macro GO_TO_NEXT_LINE 0
+    mov rax, [current_line]
+    inc rax
+    mov [current_line], rax
+
+    mov qword [current_column], 0
+%endmacro
+
 _start:
     xor ax, ax
     mov ds, ax
