@@ -126,7 +126,7 @@ lm_start:
         mov r8, [current_input_length]
         mov byte [current_input_str + r8], al
         inc r8
-        mov [current_input_str], r8
+        mov [current_input_length], r8
 
         call set_current_position
         stosb
@@ -143,18 +143,72 @@ lm_start:
         mov [current_line], rax
 
         mov qword [current_column], 0
-
-
+        mov r8, [current_input_length]
+        mov byte [current_input_str + r8], 0
+    
         mov r8, [command_table]
         xor r9, r9
 
         .start:
             cmp r9, r8
             je .command_not_found
+            mov rsi, current_input_str
+            mov rdi, r9
+            shl rdi, 4
+            add rdi, 8
+            add rdi, command_table
 
-            inc r9
-            jmp .start
+        .next_char
+            mov al, [rsi]
+            mov bl, [rdi]
 
+            cmp al, 0
+            jne .compare
+
+            cmp bl, 0
+            jne .compare
+
+            mov r8, r9
+            inc r8
+            shl rdi, 4
+            add rdi, command_table
+            mov r8, [rdi]
+            jmp .exec_command
+
+            .compare:
+
+            cmp al, 0
+            je .next_command
+
+            cmp bl, 0
+            je .next_command
+
+            cmp al, bl
+            jne .next_command
+
+            inc rsi
+            inc rdi
+
+            jmp .next_char
+            .next_command:
+                inc r9
+                jmp .start
+                
+        .exec_command:
+            call r8
+
+            mov rax, [current_line]
+            inc rax
+            mov [current_line], rax
+
+            mov qword [current_column], 0
+
+            call set_current_position
+            PRINT_P command_line, BLACK_F, WHITE_B
+            mov qword [current_column], 6
+
+            jmp .end
+            
         .command_not_found:
             call set_current_position
             PRINT_P unknown_command_str, BLACK_F, WHITE_B
@@ -168,11 +222,11 @@ lm_start:
             call set_current_position
             PRINT_P command_line, BLACK_F, WHITE_B
 
-            mov qword [current_column], 6
+            mov qword [current_column], 15
 
         .end:
-        
-        jmp .start_waiting
+            mov qword [current_input_length], 0
+            jmp .start_waiting
 
 set_current_position:
     push rax
@@ -195,11 +249,8 @@ set_current_position:
 
 key_to_ascii:
     and eax, 0xFF
-    mov esi, qwerty
-    add esi, eax
 
-    mov al, [esi]
-
+    mov al, [eax + qwerty]
     ret
 
 key_wait:
@@ -253,9 +304,15 @@ print_string:
     ret
 
 sysinfo_command:
+    call set_current_position
+    PRINT_P sysinfo_command_str, BLACK_F, WHITE_B
+    
     ret
 
 reboot_command:
+    call set_current_position
+    PRINT_P reboot_command_str, BLACK_F, WHITE_B
+    
     ret
     
 command_table:
@@ -322,4 +379,4 @@ GDT64:
    GDT_LENGTH:
 
    ; Boot Sector
-   times 1024-($-$$) db 0
+   times 2048-($-$$) db 0
