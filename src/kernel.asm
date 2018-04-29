@@ -284,7 +284,7 @@ key_wait:
     ret
     
 clear_screen:
-    PRINT_B header_title, WHITE_F, BLACK_B
+    PRINT_P header_title, WHITE_F, BLACK_B
 
     mov rdi, TRAM + 0x14 * 8
 
