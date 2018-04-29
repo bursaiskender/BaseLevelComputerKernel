@@ -112,12 +112,6 @@ lm_start:
     call clear_screen
     mov rdi, TRAM + 0x14 * 8
     PRINT_P command_line, BLACK_F, WHITE_B
-    
-    mov r8, 1
-    mov [current_line], r8
-
-    mov r8, 6
-    mov [current_column], r8
 
     .start_waiting:
         call key_wait
@@ -204,8 +198,8 @@ print_string:
     ret
     
 ; Defines
-    current_line dq 0
-    current_column dq 0
+    current_line dq 1
+    current_column dq 6
     current_input_length dq 0
     current_input_str:
         times 32 db 0
@@ -223,7 +217,7 @@ qwerty:
     db '[]',0xD,0x11
     db 'asdfghjkl;\/()'
     db 'zxcvbnm,./'
-    db 0xF,'*',0x12,0x20,0xF,0xF
+    db 0xF,'*',0x12,0x20,0xF,0xF 
     
 GDT64:
     NULL_SELECTOR:
