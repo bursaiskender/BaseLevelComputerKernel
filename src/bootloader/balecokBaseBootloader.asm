@@ -16,20 +16,20 @@ start: ; Starting process
     
     
     ; introduce bootloader to user
-    call new_line
+    call new_line_16
 
     mov si, header_0
-    call print_line
+    call print_line_16
 
     mov si, header_1
-    call print_line
+    call print_line_16
 
-    call new_line
+    call new_line_16
 
     mov si, press_key_msg
-    call print_line
+    call print_line_16
 
-    call new_line
+    call new_line_16
 
     ; A20 gate part
     in al, 0x92
@@ -39,7 +39,7 @@ start: ; Starting process
     call key_wait ; wait any key for starting process
 
     mov si, load_kernel
-        call print_line
+        call print_line_16
         BASE equ 0x100
         sectors equ 0x20
         
@@ -68,21 +68,21 @@ start: ; Starting process
 
 reset_failed:
     mov si, reset_failed_msg
-    call print_line
+    call print_line_16
 
     jmp error_end
 
 read_failed:
     mov si, read_failed_msg
-    call print_line
+    call print_line_16
 
 error_end:
     mov si, load_failed
-    call print_line
+    call print_line_16
 
     jmp $
     
-new_line:
+new_line_16:
     mov ah, 0Eh
     mov al, 0Ah
     int 10h
@@ -91,7 +91,7 @@ new_line:
     
     ret
 
-print_line:
+print_line_16:
     mov ah, 0Eh
 
 .repeat:
@@ -102,7 +102,7 @@ print_line:
     jmp .repeat
 
 .done:
-    call new_line
+    call new_line_16
     ret
 
 key_wait:
