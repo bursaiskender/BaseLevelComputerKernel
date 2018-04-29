@@ -210,19 +210,22 @@ lm_start:
             jmp .end
             
         .command_not_found:
-            call set_current_position
-            PRINT_P unknown_command_str, BLACK_F, WHITE_B
+            PRINT_P unknown_command_str_1, BLACK_F, WHITE_B
 
-            mov rax, [current_line]
-            inc rax
-            mov [current_line], rax
-
-            mov qword [current_column], 0
+            mov rax, [current_column]
+            add rax, unknown_command_length_1
+            mov [current_column], rax
 
             call set_current_position
-            PRINT_P command_line, BLACK_F, WHITE_B
+            PRINT_P current_input_str, BLACK_F, WHITE_B
 
-            mov qword [current_column], 15
+            mov rax, [current_column]
+            mov rbx, [current_input_length]
+            add rax, rbx
+            mov [current_column], rax
+
+            call set_current_position
+            PRINT_P unknown_command_str_2, BLACK_F, WHITE_B
 
         .end:
             mov qword [current_input_length], 0
@@ -337,7 +340,9 @@ command_table:
     command_line db "root@balecok $ ", 0
     sysinfo_command_str db 'sysinfo', 0
     reboot_command_str db 'reboot', 0
-    unknown_command_str db 'This command does not exist', 0
+    unknown_command_str_1 db 'The command "', 0
+    unknown_command_length_1 equ $ - unknown_command_str_1 - 1
+    unknown_command_str_2 db '" does not exist', 0
     TRAM equ 0x0B8000
     VRAM equ 0x0A0000
 
