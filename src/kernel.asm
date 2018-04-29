@@ -24,19 +24,6 @@ jmp _start
 
 %define STYLE(f,b) ((f << 4) + b)
 
-%macro PRINT_B 3
-    mov rdi, TRAM
-    mov rbx, %1
-    mov dl, STYLE(%2, %3)
-    call print_string
-%endmacro
-
-%macro PRINT_P 3
-    mov rbx, %1
-    mov dl, STYLE(%2, %3)
-    call print_string
-%endmacro
-
 %macro PRINT_NORMAL 2
     call set_current_position
     mov rbx, %1
@@ -46,19 +33,6 @@ jmp _start
     mov rax, [current_column]
     add rax, %2
     mov [current_column], rax
-%endmacro
-
-%macro GO_TO_NEXT_LINE 0
-    mov rax, [current_line]
-    inc rax
-    mov [current_line], rax
-
-    mov qword [current_column], 0
-%endmacro
-
-%macro STRING 2
-     %1 db %2, 0
-     %1_length equ $ - %1 - 1
 %endmacro
 
 _start:
@@ -134,11 +108,6 @@ pm_start:
     
 lm_start:
     call clear_screen
-    mov qword [current_line], 1
-    call set_current_position
-    mov qword [current_column], 15
-    PRINT_P command_line, BLACK_F, WHITE_B
-
     .start_waiting:
         call key_wait
         
@@ -162,7 +131,7 @@ lm_start:
         jmp .start_waiting
 
     .new_command:
-        GO_TO_NEXT_LINE
+        call goto_next_line
         mov r8, [current_input_length]
         mov byte [current_input_str + r8], 0
     
@@ -214,31 +183,25 @@ lm_start:
 
             
         .command_not_found:
-            PRINT_P unknown_command_str_1, BLACK_F, WHITE_B
-
-            mov rax, [current_column]
-            add rax, unknown_command_length_1
-            mov [current_column], rax
+            PRINT_NORMAL unknown_command_str_1, unknown_command_str_1_length
 
             call set_current_position
-            PRINT_P current_input_str, BLACK_F, WHITE_B
-
+            mov rbx, current_input_str
+            mov dl, STYLE(BLACK_F, WHITE_B)
+            call print_string
             mov rax, [current_column]
             mov rbx, [current_input_length]
             add rax, rbx
             mov [current_column], rax
-
-            call set_current_position
-            PRINT_P unknown_command_str_2, BLACK_F, WHITE_B
+            
+            PRINT_NORMAL unknown_command_str_2, unknown_command_str_2_length
 
         .end:
             mov qword [current_input_length], 0
 
-            GO_TO_NEXT_LINE
+            call goto_next_line
 
-            call set_current_position
-            PRINT_P command_line, BLACK_F, WHITE_B
-            mov qword [current_column], 15
+            PRINT_NORMAL command_line, command_line_length
 
             jmp .start_waiting
 
@@ -284,14 +247,19 @@ key_wait:
     ret
     
 clear_screen:
-    PRINT_P header_title, WHITE_F, BLACK_B
+    mov rbx, header_title
+    mov dl, STYLE(WHITE_F, BLACK_B)
+    call print_string
 
     mov rdi, TRAM + 0x14 * 8
 
     mov rcx, 0x14 * 24
     mov rax, 0x0720072007200720
     rep stosq
-
+    
+    mov qword [current_line], 1
+    PRINT_NORMAL command_line, command_line_length
+    
     ret
 
 print_string:
@@ -393,7 +361,15 @@ int_str_length:
 
         ret
         
-
+goto_next_line:
+    push rax
+    mov rax, [current_line]
+    inc rax
+    mov [current_line], rax
+    mov qword [current_column], 0
+    pop rax
+    ret
+    
 sysinfo_command:
     push rbp
     mov rbp, rsp
@@ -418,7 +394,7 @@ sysinfo_command:
     mov dl, STYLE(BLACK_F, WHITE_B)
     call print_string
 
-    GO_TO_NEXT_LINE
+    call goto_next_line
     PRINT_NORMAL sysinfo_stepping, sysinfo_stepping_length
 
     mov eax, 1
@@ -433,7 +409,7 @@ sysinfo_command:
     mov dl, STYLE(BLACK_F, WHITE_B)
     call print_int
 
-    GO_TO_NEXT_LINE
+    call goto_next_line
     PRINT_NORMAL sysinfo_model, sysinfo_model_length
 
     mov r14, r15
@@ -455,7 +431,7 @@ sysinfo_command:
     mov dl, STYLE(BLACK_F, WHITE_B)
     call print_int
 
-    GO_TO_NEXT_LINE
+    call goto_next_line
     PRINT_NORMAL sysinfo_family, sysinfo_family_length
 
     mov r8, r13
@@ -464,7 +440,7 @@ sysinfo_command:
     mov dl, STYLE(BLACK_F, WHITE_B)
     call print_int
 
-    GO_TO_NEXT_LINE
+    call goto_next_line
     PRINT_NORMAL sysinfo_features, sysinfo_features_length
 
     mov eax, 1
@@ -562,22 +538,23 @@ command_table:
     dq reboot_command_str
     dq reboot_command
     
+%macro STRING 2
+     %1 db %2, 0
+     %1_length equ $ - %1 - 1
+%endmacro
+
 ; Defines
     current_line dq 0
     current_column dq 0
     current_input_length dq 0
     current_input_str:
         times 32 db 0
-    kernel_header_0 db 'BaLeCoK -> Base Level Computer Kernel', 0
-    kernel_header_1 db 'Developed and Maintained by @BTaskaya', 0
-    kernel_header_2 db 'Welcome to the our Kernel Part', 0
     header_title db "                                    BaLeCoK                                     ", 0
-    command_line db "root@balecok $ ", 0
     sysinfo_command_str db 'sysinfo', 0
-    reboot_command_str db 'reboot', 0
-    unknown_command_str_1 db 'The command "', 0
-    unknown_command_length_1 equ $ - unknown_command_str_1 - 1
-    unknown_command_str_2 db '" does not exist', 0
+    reboot_command_str db  'reboot', 0
+    STRING command_line,  "root@balecok $ "
+    STRING unknown_command_str_1, "The command "
+    STRING unknown_command_str_2, "does not exist"
     STRING sysinfo_vendor_id, "Vendor ID: "
     STRING sysinfo_stepping, "Stepping: "
     STRING sysinfo_model, "Model: "
