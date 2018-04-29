@@ -44,7 +44,6 @@ set_current_position:
     ret
     
 print_normal:
-    push rax
     push rbx
     push rdx
     push rdi
@@ -54,14 +53,13 @@ print_normal:
     mov dl, STYLE(BLACK_F, WHITE_B)
     call print_string
 
-    mov rax, [current_column]
-    add rax, r9
-    mov [current_column], rax
+    mov rbx, [current_column]
+    add rbx, r9
+    mov [current_column], rbx
 
     pop rdi
     pop rdx
     pop rbx
-    pop rax
 
     ret
     
@@ -88,6 +86,19 @@ print_string:
 
     ret
     
+print_int_normal:
+    push rdi
+    push rdx
+
+    call set_current_position
+    mov dl, STYLE(BLACK_F, WHITE_B)
+    call print_int
+
+    pop rdi
+    pop rdx
+
+    ret
+       
 print_int:
     push rax
     push rbx
