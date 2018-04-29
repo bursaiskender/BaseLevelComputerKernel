@@ -115,7 +115,16 @@ lm_start:
 
     .start_waiting:
         call key_wait
+        
+        cmp al, 28
+        je .new_command
+        
         call key_to_ascii
+
+        mov r8, [current_input_length]
+        mov byte [current_input_str + r8], al
+        inc r8
+        mov [current_input_str], r8
 
         mov r10, rax
 
@@ -135,6 +144,15 @@ lm_start:
         mov r13, [current_column]
         inc r13
         mov [current_column], r13
+
+        jmp .start_waiting
+
+    .new_command:
+        mov rax, [current_line]
+        inc rax
+        mov [current_line], rax
+
+        mov qword [current_column], 0
 
         jmp .start_waiting
 
@@ -196,6 +214,15 @@ print_string:
     pop rax
 
     ret
+
+sysinfo_command:
+    ret
+
+command_table:
+    dq 1
+
+    dq sysinfo_command_str
+    dq sysinfo_command
     
 ; Defines
     current_line dq 1
@@ -208,6 +235,7 @@ print_string:
     kernel_header_2 db 'Welcome to the our Kernel Part', 0
     header_title db "                                    BaLeCoK                                     ", 0
     command_line db "root@balecok $ ", 0
+    sysinfo_command_str db 'sysinfo', 0
     TRAM equ 0x0B8000
     VRAM equ 0x0A0000
 
