@@ -32,9 +32,9 @@ start: ; Starting process
     call new_line
 
     ; A20 gate part
-    in         al, 0x92
-    or         al, 2
-    out         0x92, al
+    in al, 0x92
+    or al, 2
+    out 0x92, al
     
     call key_wait ; wait any key for starting process
 
@@ -106,16 +106,16 @@ print_line:
     ret
 
 key_wait:
-    mov        al, 0xD2
-    out        64h, al
-    mov        al, 0x80
-    out        60h, al
+    mov al, 0xD2
+    out 64h, al
+    mov al, 0x80
+    out 60h, al
     keyup:
-        in        al, 0x60
-        and         al, 10000000b
-    jnz        keyup
+        in al, 0x60
+        and al, 10000000b
+    jnz keyup
     Keydown:
-    in        al, 0x60
+    in al, 0x60
 
     ret
 

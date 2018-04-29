@@ -53,18 +53,18 @@ print_line:
     ret
 
 key_wait:
-    mov        al, 0xD2
-    out        64h, al
+    mov al, 0xD2
+    out 64h, al
 
-    mov        al, 0x80
-    out        60h, al
+    mov al, 0x80
+    out 60h, al
 
     keyup:
-        in        al, 0x60
-        and         al, 10000000b
-    jnz        keyup
-    Keydown:
-    in        al, 0x60
+        in al, 0x60
+        and al, 10000000b
+    jnz keyup
+    keydown:
+        in al, 0x60
 
     ret
 

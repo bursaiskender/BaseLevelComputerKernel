@@ -1,3 +1,5 @@
+default: start
+
 bootloader.bin: src/bootloader/balecokBaseBootloader.asm
 	nasm -f bin -o bootloader.bin src/bootloader/balecokBaseBootloader.asm
 
@@ -14,4 +16,6 @@ start: balecok.iso
 
 clean:
 	rm -rf bootloader.bin
+	rm -rf balecok.bin
+	rm -rf kernel.bin
 	rm -rf balecok.iso
