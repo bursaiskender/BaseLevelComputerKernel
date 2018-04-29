@@ -261,7 +261,24 @@ sysinfo_command:
     rdmsr
 
     .last:
+    call goto_next_line
 
+    mov r8, sysinfo_l2
+    mov r9, sysinfo_l2_length
+    call print_normal
+
+    xor rcx, rcx
+    mov eax, 0x80000006
+    cpuid
+
+    and ecx, 0xFFFF0000
+    shr ecx, 16
+
+    call set_current_position
+    mov r8, rcx
+    mov dl, STYLE(BLACK_F, WHITE_B)
+    call print_int
+    
     pop r10
     pop rdx
     pop rcx
@@ -396,5 +413,6 @@ STRING sysinfo_max_frequency, "Max Frequency: "
 STRING sysinfo_current_frequency, "Current Frequency: "
 STRING devinfo_author, "Batuhan Osman Taskaya - @BTaskaya on github -"
 STRING devinfo_repo, "github.com/BaLeCoK/BaseLevelComputerKernel"
+STRING sysinfo_l2, "L2 Cache Size: "
 STRING available_commands, "Available commands: "
 STRING tab, "  "
