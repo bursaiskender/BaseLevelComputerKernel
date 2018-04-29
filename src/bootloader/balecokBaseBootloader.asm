@@ -19,6 +19,9 @@ rm_start: ; Starting process
     mov ds, ax 
     ; set data segments
     
+    mov ah, 0x01
+    mov cx, 0x2607
+    int 0x10
     
     ; introduce bootloader to user
     call new_line_16

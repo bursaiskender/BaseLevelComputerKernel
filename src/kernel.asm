@@ -3,8 +3,6 @@
 
 jmp _start 
 
-%include "src/utils/intel_16.asm" ; Include common functions
-
 
 %define BLACK_F 0x0
 %define BLUE_F 0x1
@@ -42,19 +40,7 @@ jmp _start
 _start:
     xor ax, ax
     mov ds, ax
-
-    call new_line_16
-
-    mov si, kernel_header_0
-    call print_line_16
-
-    mov si, kernel_header_1
-    call print_line_16
-
-    mov si, kernel_header_2
-    call print_line_16
-
-    call new_line_16
+    
 
     cli
 
