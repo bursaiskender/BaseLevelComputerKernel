@@ -297,8 +297,11 @@ sysinfo_command:
     ret
 
 reboot_command:
-    call set_current_position
-    PRINT_P reboot_command_str, BLACK_F, WHITE_B
+    in al, 0x64
+    or al, 0xFE
+    out 0x64, al
+    mov al, 0xFE
+    out 0x64, al
     
     ret
     
