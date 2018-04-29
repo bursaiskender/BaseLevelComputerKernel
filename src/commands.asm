@@ -244,20 +244,22 @@ sysinfo_command:
     mov dl, STYLE(BLACK_F, WHITE_B)
     call print_int
 
+    mov eax, 0x06
+    cpuid
+    and ecx, 1b
+    cmp ecx, 0
+    je .last
+    
     call goto_next_line
 
     mov r8, sysinfo_current_frequency
     mov r9, sysinfo_current_frequency_length
     call print_normal
 
-    xor rax, rax
-    mov ax, cs
-    and ax, 11b
+    mov rcx, 0xe7
+    rdmsr
+    mov rcx, 0xe8
 
-    cmp ax, 0
-    jne .last
-
-    mov ecx, 0xe7
     rdmsr
 
     .last:
