@@ -1,12 +1,12 @@
-balecok.bin: src/balecok.asm
-	nasm -f bin -o balecok.bin src/balecok.asm
+balecokBootloader.bin: src/bootloader/balecok.asm
+	nasm -f bin -o balecokBootloader.bin src/bootloader/balecok.asm
 
-balecok.iso: balecok.bin
-	dd status=noxfer conv=notrunc if=balecok.bin of=balecok.iso
+balecokBootloader.iso: balecokBootloader.bin
+	dd status=noxfer conv=notrunc if=balecokBootloader.bin of=balecokBootloader.iso
 
-start: balecok.iso
-	qemu-system-x86_64 -fda balecok.iso
+start: balecokBootloader.iso
+	qemu-system-x86_64 -fda balecokBootloader.iso
 
 clean:
-	rm -rf balecok.bin
-	rm -rf balecok.iso
+	rm -rf balecokBootloader.bin
+	rm -rf balecokBootloader.iso
