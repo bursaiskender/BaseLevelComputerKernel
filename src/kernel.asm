@@ -24,17 +24,6 @@ jmp _start
 
 %define STYLE(f,b) ((f << 4) + b)
 
-%macro PRINT_NORMAL 2
-    call set_current_position
-    mov rbx, %1
-    mov dl, STYLE(BLACK_F, WHITE_B)
-    call print_string
-
-    mov rax, [current_column]
-    add rax, %2
-    mov [current_column], rax
-%endmacro
-
 _start:
     xor ax, ax
     mov ds, ax
@@ -183,7 +172,9 @@ lm_start:
 
             
         .command_not_found:
-            PRINT_NORMAL unknown_command_str_1, unknown_command_str_1_length
+            mov r8, unknown_command_str_1
+            mov r9, unknown_command_str_1_length
+            call print_normal
 
             call set_current_position
             mov rbx, current_input_str
@@ -194,21 +185,26 @@ lm_start:
             add rax, rbx
             mov [current_column], rax
             
-            PRINT_NORMAL unknown_command_str_2, unknown_command_str_2_length
-
+            mov r8, unknown_command_str_2
+            mov r9, unknown_command_str_2_length
+            call print_normal
+            
         .end:
             mov qword [current_input_length], 0
 
             call goto_next_line
 
-            PRINT_NORMAL command_line, command_line_length
+            mov r8, command_line
+            mov r9, command_line_length
+            call print_normal
 
             jmp .start_waiting
 
 set_current_position:
     push rax
     push rbx
-
+    push rdx
+    
     mov rax, [current_line]
     mov rbx, 0x14 * 8
     mul rbx
@@ -218,7 +214,7 @@ set_current_position:
 
     lea rdi, [rax + rbx + TRAM]
 
-
+    pop rdx
     pop rbx
     pop rax
 
@@ -246,20 +242,24 @@ key_wait:
 
     ret
     
+
 clear_screen:
+    call set_current_position
     mov rbx, header_title
     mov dl, STYLE(WHITE_F, BLACK_B)
     call print_string
 
     mov rdi, TRAM + 0x14 * 8
-
     mov rcx, 0x14 * 24
     mov rax, 0x0720072007200720
     rep stosq
-    
+
     mov qword [current_line], 1
-    PRINT_NORMAL command_line, command_line_length
-    
+
+    mov r8, command_line
+    mov r9, command_line_length
+    call print_normal
+
     ret
     
 print_normal:
@@ -281,6 +281,8 @@ print_normal:
     pop rdx
     pop rbx
     pop rax
+
+    ret
     
 print_string:
     push rax
@@ -400,7 +402,9 @@ sysinfo_command:
     push rcx
     push rdx
 
-    PRINT_NORMAL sysinfo_vendor_id, sysinfo_vendor_id_length
+    mov r8, sysinfo_vendor_id
+    mov r9, sysinfo_vendor_id_length
+    call print_normal
 
     xor eax, eax
     cpuid
@@ -415,7 +419,10 @@ sysinfo_command:
     call print_string
 
     call goto_next_line
-    PRINT_NORMAL sysinfo_stepping, sysinfo_stepping_length
+    mov r8, sysinfo_stepping
+    mov r9, sysinfo_stepping_length
+    call print_normal
+    
 
     mov eax, 1
     cpuid
@@ -430,7 +437,9 @@ sysinfo_command:
     call print_int
 
     call goto_next_line
-    PRINT_NORMAL sysinfo_model, sysinfo_model_length
+    mov r8, sysinfo_model
+    mov r9, sysinfo_model_length
+    call print_normal
 
     mov r14, r15
     and r14, 0xF0
@@ -452,7 +461,9 @@ sysinfo_command:
     call print_int
 
     call goto_next_line
-    PRINT_NORMAL sysinfo_family, sysinfo_family_length
+    mov r8, sysinfo_family
+    mov r9, sysinfo_family_length
+    call print_normal
 
     mov r8, r13
     add r8, r11
@@ -461,7 +472,9 @@ sysinfo_command:
     call print_int
 
     call goto_next_line
-    PRINT_NORMAL sysinfo_features, sysinfo_features_length
+    mov r8, sysinfo_features
+    mov r9, sysinfo_features_length
+    call print_normal
 
     mov eax, 1
     cpuid
@@ -473,7 +486,9 @@ sysinfo_command:
     cmp r15, 0
     je .sse
 
-    PRINT_NORMAL sysinfo_mmx, sysinfo_mmx_length
+    mov r8, sysinfo_mmx
+    mov r9, sysinfo_mmx_length
+    call print_normal
 
     .sse:
 
@@ -482,7 +497,9 @@ sysinfo_command:
     cmp r15, 0
     je .sse2
 
-    PRINT_NORMAL sysinfo_sse, sysinfo_sse_length
+    mov r8, sysinfo_sse
+    mov r9, sysinfo_sse_length
+    call print_normal
 
     .sse2:
 
@@ -491,7 +508,9 @@ sysinfo_command:
     cmp r15, 0
     je .ht
 
-    PRINT_NORMAL sysinfo_sse2, sysinfo_sse2_length
+    mov r8, sysinfo_sse2
+    mov r9, sysinfo_sse2_length
+    call print_normal
 
     .ht:
 
@@ -500,7 +519,9 @@ sysinfo_command:
     cmp r15, 0
     je .sse3
 
-    PRINT_NORMAL sysinfo_ht, sysinfo_ht_length
+    mov r8, sysinfo_ht
+    mov r9, sysinfo_ht_length
+    call print_normal
 
     .sse3:
 
@@ -509,8 +530,10 @@ sysinfo_command:
     cmp r15, 0
     je .sse4_1
 
-    PRINT_NORMAL sysinfo_sse3, sysinfo_sse3_length
-
+    mov r8, sysinfo_sse3
+    mov r9, sysinfo_sse3_length
+    call print_normal
+    
     .sse4_1:
 
     mov r15, rcx
@@ -518,8 +541,10 @@ sysinfo_command:
     cmp r15, 0
     je .sse4_2
 
-    PRINT_NORMAL sysinfo_sse4_1, sysinfo_sse4_1_length
-
+    mov r8, sysinfo_sse4_1
+    mov r9, sysinfo_sse4_1_length
+    call print_normal
+    
     .sse4_2:
 
     mov r15, rcx
@@ -527,8 +552,10 @@ sysinfo_command:
     cmp r15, 0
     je .last
 
-    PRINT_NORMAL sysinfo_sse4_2, sysinfo_sse4_2_length
-
+    mov r8, sysinfo_sse4_2
+    mov r9, sysinfo_sse4_2_length
+    call print_normal
+    
     .last:
 
     pop rdx
