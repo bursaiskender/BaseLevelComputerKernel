@@ -19,6 +19,7 @@
 %define STYLE(f,b) ((f << 4) + b)
 
 %include "src/utils/macros.asm"
+%include "src/utils/keyboard.asm"
 %include "src/commands.asm"
 
 shell_start:
@@ -148,28 +149,6 @@ set_current_position:
     pop rdx
     pop rbx
     pop rax
-
-    ret
-
-key_to_ascii:
-    and eax, 0xFF
-
-    mov al, [eax + qwerty]
-    ret
-
-key_wait:
-    mov al, 0xD2
-    out 0x64, al
-
-    mov al, 0x80
-    out 0x60, al
-
-    .key_up:
-        in al, 0x60
-        and al, 10000000b
-    jnz .key_up
-
-        in al, 0x60
 
     ret
     
@@ -316,11 +295,3 @@ goto_next_line:
     STRING unknown_command_str_2, " does not exist"
     TRAM equ 0x0B8000
     VRAM equ 0x0A0000
-
-qwerty:
-    db '0',0xF,'1234567890',0xF,0xF,0xF,0xF
-    db 'qwertyuiop'
-    db '[]',0xD,0x11
-    db 'asdfghjkl;\/()'
-    db 'zxcvbnm,./'
-    db 0xF,'*',0x12,0x20,0xF,0xF 
