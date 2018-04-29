@@ -56,6 +56,11 @@ jmp _start
     mov qword [current_column], 0
 %endmacro
 
+%macro STRING 2
+     %1 db %2, 0
+     %1_length equ $ - %1 - 1
+%endmacro
+
 _start:
     xor ax, ax
     mov ds, ax
@@ -157,11 +162,7 @@ lm_start:
         jmp .start_waiting
 
     .new_command:
-        mov rax, [current_line]
-        inc rax
-        mov [current_line], rax
-
-        mov qword [current_column], 0
+        GO_TO_NEXT_LINE
         mov r8, [current_input_length]
         mov byte [current_input_str + r8], 0
     
@@ -232,6 +233,13 @@ lm_start:
 
         .end:
             mov qword [current_input_length], 0
+
+            GO_TO_NEXT_LINE
+
+            call set_current_position
+            PRINT_P command_line, BLACK_F, WHITE_B
+            mov qword [current_column], 6
+
             jmp .start_waiting
 
 set_current_position:
