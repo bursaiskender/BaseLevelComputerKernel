@@ -96,8 +96,8 @@ pm_start:
     or eax, 100000000b
     wrmsr
     
-    mov     eax, 0x70000    
-    mov     cr3, eax        
+    mov eax, 0x70000    
+    mov cr3, eax        
 
 
     mov eax, cr0
@@ -110,7 +110,9 @@ pm_start:
     
 lm_start:
     call clear_screen
-    mov rdi, TRAM + 0x14 * 8
+    mov qword [current_line], 1
+    call set_current_position
+    mov qword [current_column], 15
     PRINT_P command_line, BLACK_F, WHITE_B
 
     .start_waiting:
@@ -126,19 +128,7 @@ lm_start:
         inc r8
         mov [current_input_str], r8
 
-        mov r10, rax
-
-        mov rax, [current_line]
-        mov rbx, 0x14 * 8
-        mul rbx
-
-        mov r11, rax
-        mov rax, r10
-
-        mov r12, [current_column]
-        shl r12, 1
-
-        lea rdi, [r11 + r12 + TRAM]
+        call set_current_position
         stosb
 
         mov r13, [current_column]
@@ -154,7 +144,54 @@ lm_start:
 
         mov qword [current_column], 0
 
+
+        mov r8, [command_table]
+        xor r9, r9
+
+        .start:
+            cmp r9, r8
+            je .command_not_found
+
+            inc r9
+            jmp .start
+
+        .command_not_found:
+            call set_current_position
+            PRINT_P unknown_command_str, BLACK_F, WHITE_B
+
+            mov rax, [current_line]
+            inc rax
+            mov [current_line], rax
+
+            mov qword [current_column], 0
+
+            call set_current_position
+            PRINT_P command_line, BLACK_F, WHITE_B
+
+            mov qword [current_column], 6
+
+        .end:
+        
         jmp .start_waiting
+
+set_current_position:
+    push rax
+    push rbx
+
+    mov rax, [current_line]
+    mov rbx, 0x14 * 8
+    mul rbx
+
+    mov rbx, [current_column]
+    shl rbx, 1
+
+    lea rdi, [rax + rbx + TRAM]
+
+
+    pop rbx
+    pop rax
+
+    ret
 
 key_to_ascii:
     and eax, 0xFF
@@ -218,15 +255,21 @@ print_string:
 sysinfo_command:
     ret
 
+reboot_command:
+    ret
+    
 command_table:
-    dq 1
+    dq 2
 
     dq sysinfo_command_str
     dq sysinfo_command
     
+    dq reboot_command_str
+    dq reboot_command
+    
 ; Defines
-    current_line dq 1
-    current_column dq 6
+    current_line dq 0
+    current_column dq 0
     current_input_length dq 0
     current_input_str:
         times 32 db 0
@@ -236,6 +279,8 @@ command_table:
     header_title db "                                    BaLeCoK                                     ", 0
     command_line db "root@balecok $ ", 0
     sysinfo_command_str db 'sysinfo', 0
+    reboot_command_str db 'reboot', 0
+    unknown_command_str db 'This command does not exist', 0
     TRAM equ 0x0B8000
     VRAM equ 0x0A0000
 
