@@ -575,15 +575,31 @@ reboot_command:
     out 0x64, al
     
     ret
+
+devinfo_command:
+    mov r8, devinfo_author
+    mov r9, devinfo_author_length
+    call print_normal
+    
+    call goto_next_line
+    
+    mov r8, devinfo_repo
+    mov r9, devinfo_repo_length
+    call print_normal
+    
+    ret
     
 command_table:
-    dq 2
+    dq 3
 
     dq sysinfo_command_str
     dq sysinfo_command
     
     dq reboot_command_str
     dq reboot_command
+    
+    dq devinfo_command_str
+    dq devinfo_command
     
 %macro STRING 2
      %1 db %2, 0
@@ -599,9 +615,10 @@ command_table:
     header_title db "                                    BaLeCoK                                     ", 0
     sysinfo_command_str db 'sysinfo', 0
     reboot_command_str db  'reboot', 0
+    devinfo_command_str db 'devinfo', 0
     STRING command_line,  "root@balecok $ "
     STRING unknown_command_str_1, "The command "
-    STRING unknown_command_str_2, "does not exist"
+    STRING unknown_command_str_2, " does not exist"
     STRING sysinfo_vendor_id, "Vendor ID: "
     STRING sysinfo_stepping, "Stepping: "
     STRING sysinfo_model, "Model: "
@@ -614,6 +631,8 @@ command_table:
     STRING sysinfo_sse4_1, "sse4_1 "
     STRING sysinfo_sse4_2, "sse4_2 "
     STRING sysinfo_ht, "ht "
+    STRING devinfo_author, "Batuhan Osman Taskaya - @BTaskaya on github -"
+    STRING devinfo_repo, "github.com/BaLeCoK/BaseLevelComputerKernel"
     TRAM equ 0x0B8000
     VRAM equ 0x0A0000
 
