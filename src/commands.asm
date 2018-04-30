@@ -259,7 +259,7 @@ sysinfo_command:
 
     
 reboot_command:
-    in al, 0x64
+    mov al, 0x64
     or al, 0xFE
     out 0x64, al
     mov al, 0xFE
@@ -314,6 +314,9 @@ uptime_command:
     pop r8
 
     ret
+
+date_command:
+    jmp $
     
 help_command:
     push r8
@@ -360,7 +363,7 @@ help_command:
     ret
     
 command_table:
-    dq 6
+    dq 7
 
     dq sysinfo_command_str
     dq sysinfo_command
@@ -377,6 +380,9 @@ command_table:
     dq uptime_command_str
     dq uptime_command
     
+    dq date_command_str
+    dq date_command
+    
     dq help_command_str
     dq help_command
     
@@ -384,8 +390,9 @@ sysinfo_command_str db 'sysinfo', 0
 reboot_command_str db  'reboot', 0
 devinfo_command_str db 'devinfo', 0
 clear_command_str db 'clear', 0
-help_command_str db 'help', 0
+date_command_str db 'date', 0
 uptime_command_str db 'uptime', 0
+help_command_str db 'help', 0
 STRING sysinfo_vendor_id, "Vendor ID: "
 STRING sysinfo_stepping, "Stepping: "
 STRING sysinfo_model, "Model: "
@@ -412,4 +419,4 @@ STRING sysinfo_l2, "L2 Cache Size: "
 STRING available_commands, "Available commands: "
 STRING uptime_message, "Uptime (s): "
 STRING tab, "  "
-
+STRING colon, ":"
