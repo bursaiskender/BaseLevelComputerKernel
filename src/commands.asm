@@ -268,6 +268,22 @@ clear_command:
     mov qword [current_column], 0
 
     ret
+
+uptime_command:
+    push r8
+    push r9
+
+    mov r8, uptime_message
+    mov r9, uptime_message_length
+    call print_normal
+
+    mov r8, [timer_seconds]
+    call print_int_normal
+
+    pop r9
+    pop r8
+
+    ret
     
 help_command:
     push r8
@@ -314,7 +330,7 @@ help_command:
     ret
     
 command_table:
-    dq 5
+    dq 6
 
     dq sysinfo_command_str
     dq sysinfo_command
@@ -328,6 +344,9 @@ command_table:
     dq clear_command_str
     dq clear_command
     
+    dq uptime_command_str
+    dq uptime_command
+    
     dq help_command_str
     dq help_command
     
@@ -336,6 +355,7 @@ reboot_command_str db  'reboot', 0
 devinfo_command_str db 'devinfo', 0
 clear_command_str db 'clear', 0
 help_command_str db 'help', 0
+uptime_command_str db 'uptime', 0
 STRING sysinfo_vendor_id, "Vendor ID: "
 STRING sysinfo_stepping, "Stepping: "
 STRING sysinfo_model, "Model: "
@@ -358,4 +378,6 @@ STRING devinfo_author, "Batuhan Osman Taskaya - @BTaskaya on github -"
 STRING devinfo_repo, "github.com/BaLeCoK/BaseLevelComputerKernel"
 STRING sysinfo_l2, "L2 Cache Size: "
 STRING available_commands, "Available commands: "
+STRING uptime_message, "Uptime (s): "
 STRING tab, "  "
+

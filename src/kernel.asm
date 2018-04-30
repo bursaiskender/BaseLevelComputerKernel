@@ -81,6 +81,8 @@ lm_start:
     call install_irqs
 
     sti
+    
+    call install_timer
 
     call shell_start
 
@@ -89,6 +91,7 @@ lm_start:
 %include "src/utils/macros.asm"
 %include "src/utils/console.asm"
 
+%include 'src/timer.asm'
 %include "src/interrupts.asm"
 %include "src/shell.asm"
 
