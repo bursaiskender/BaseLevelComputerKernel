@@ -14,6 +14,8 @@ balecok.iso: bootloader.bin kernel.bin
 start: balecok.iso
 	qemu-system-x86_64 -fda balecok.iso
 
+startDevEnv: src/* src/bootloader/*.asm src/utils/*.asm
+	geany src/*.asm src/bootloader/*.asm src/utils/*.asm
 clean:
 	rm -rf bootloader.bin
 	rm -rf balecok.bin

@@ -73,7 +73,9 @@ pm_start:
     jmp (LONG_SELECTOR-GDT64):lm_start
     
 [BITS 64]
-
+%include "src/utils/macros.asm"
+%include "src/utils/console.asm"
+%include "src/interrupts.asm"
 %include "src/shell.asm"
 
 lm_start:
@@ -108,4 +110,4 @@ GDT64:
 
    GDT_LENGTH:
 
-   times 4196-($-$$) db 0
+   times 16384-($-$$) db 0

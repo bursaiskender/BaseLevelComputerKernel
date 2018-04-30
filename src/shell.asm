@@ -1,7 +1,5 @@
-%include "src/utils/macros.asm"
 %include "src/utils/utils.asm"
 %include "src/utils/keyboard.asm"
-%include "src/utils/console.asm"
 %include "src/commands.asm"
 
 shell_start:
@@ -128,7 +126,6 @@ goto_next_line:
     current_input_str:
         times 32 db 0
     header_title db "                                    BaLeCoK                                     ", 0
-    clear_command_str db 'clear', 0
     STRING command_line,  "root@balecok $ "
     STRING unknown_command_str_1, "The command "
     STRING unknown_command_str_2, " does not exist"
