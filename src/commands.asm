@@ -315,6 +315,40 @@ uptime_command:
 
     ret
 
+get_rtc_register:
+    out 0x70, al
+
+    in al, 0x71
+
+    ret
+
+bcd_to_binary:
+    push rbx
+    push rcx
+    push rdx
+
+    mov dl, al
+    and dl, 0xF0
+    shr dl, 1
+
+    mov bl, al
+    and bl, 0xF0
+    shr bl, 3
+
+    mov cl, al
+    and cl, 0xF
+
+    add dl, bl
+    add dl, cl
+
+    mov al, dl
+
+    pop rdx
+    pop rcx
+    pop rbx
+
+    ret
+    
 date_command:
     jmp $
     
