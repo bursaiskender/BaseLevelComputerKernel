@@ -52,7 +52,7 @@ _isr%1:
 
 %macro IDT_SET_GATE 4
 
-    lea rdi, [idt + %1 * 128]
+    lea rdi, [IDT64 + %1 * 128]
 
     mov rax, %2
     mov word [rdi], ax 
@@ -75,7 +75,7 @@ CREATE_ISR i
 %endrep
 
 install_idt:
-    lidt [idtp - (0x1000)]
+    lidt [IDTR64]
 
     ret
 
@@ -114,9 +114,9 @@ install_isrs:
     IDT_SET_GATE 31, _isr31, 0x08, 0x8E
 
     ret
-idt:
+IDT64:
     times 256 dq 0,0
 
-idtp:
+IDTR64:
     dw (256 * 16) - 1  
-    dq idt              
+    dd IDT64              
