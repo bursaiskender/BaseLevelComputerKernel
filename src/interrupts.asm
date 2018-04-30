@@ -193,7 +193,12 @@ install_irqs:
     IDT_SET_GATE 47, _irq15, LONG_SELECTOR-GDT64, 0x8E
 
     ret
+    
+register_irq_handler:
+    mov [irq_handlers + r8 * 8], r9
 
+    ret
+    
 IDT64:
     times 256 dq 0,0
 
