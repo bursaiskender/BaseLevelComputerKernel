@@ -48,9 +48,11 @@ key_entered:
     jmp .end_handler
 
     .enter:
+        mov r8, [current_input_length]
+        test r8, r8
+        je .end
         call goto_next_line
 
-        mov r8, [current_input_length]
         mov byte [current_input_str + r8], 0
 
         mov r8, [command_table] 

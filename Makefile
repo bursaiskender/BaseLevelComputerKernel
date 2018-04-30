@@ -1,14 +1,17 @@
 default: start-qemu
 
+KERNEL_SRC=$(wildcard src/*.asm)
+KERNEL_UTILS_SRC=$(wildcard src/utils/*.asm)
+
 bootloader.bin: src/bootloader/balecokBaseBootloader.asm
 	nasm -f bin -o bootloader.bin src/bootloader/balecokBaseBootloader.asm
 
-kernel.bin: src/kernel.asm
-	nasm -f bin -o kernel.bin src/kernel.asm
+micro_kernel.bin: $(KERNEL_SRC) $(KERNEL_UTILS_SRC)
+	nasm -f bin -o micro_kernel.bin src/micro_kernel.asm
 	
-balecok.iso: bootloader.bin kernel.bin
+balecok.iso: bootloader.bin micro_kernel.bin
 	cat bootloader.bin > balecok.bin
-	cat kernel.bin >> balecok.bin
+	cat micro_kernel.bin >> balecok.bin
 	dd status=noxfer conv=notrunc if=balecok.bin of=balecok.iso
 
 start-qemu: balecok.iso
@@ -19,6 +22,7 @@ start-bochs: balecok.iso
 	
 devEnv: src/* src/bootloader/*.asm src/utils/*.asm
 	geany src/*.asm src/bootloader/*.asm src/utils/*.asm
+	
 clean:
 	rm -rf bootloader.bin
 	rm -rf balecok.bin

@@ -461,7 +461,7 @@ date_command:
     mov r9, colon_length
     call print_normal
 
-    .display
+    .display:
 
 
     movzx r8, byte [rsp+2]

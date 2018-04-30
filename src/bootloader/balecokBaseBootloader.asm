@@ -48,7 +48,7 @@ rm_start: ; Starting process
 
     mov si, load_kernel
         call print_line_16
-        BASE equ 0x100
+        ASM_KERNEL_BASE equ 0x100
         sectors equ 0x20
         
     xor ax, ax
@@ -58,7 +58,7 @@ rm_start: ; Starting process
 
     jc reset_failed
 
-    mov ax, BASE
+    mov ax, ASM_KERNEL_BASE
     mov es, ax
     xor bx, bx
 
@@ -75,7 +75,7 @@ rm_start: ; Starting process
     cmp al, sectors
     jne read_failed
     
-    jmp dword BASE:0x0
+    jmp dword ASM_KERNEL_BASE:0x0
 
 reset_failed:
     mov si, reset_failed_msg
