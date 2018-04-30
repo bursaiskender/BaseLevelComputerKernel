@@ -1,4 +1,4 @@
-default: start
+default: start-qemu
 
 bootloader.bin: src/bootloader/balecokBaseBootloader.asm
 	nasm -f bin -o bootloader.bin src/bootloader/balecokBaseBootloader.asm
