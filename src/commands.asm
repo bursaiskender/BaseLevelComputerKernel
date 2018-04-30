@@ -254,7 +254,7 @@ clear_command:
     ; Print top bar
     call set_current_position
     mov rbx, header_title
-    mov dl, STYLE(WHITE_F, BLACK_B)
+    mov dl, STYLE(WHITE_F, CYAN_B)
     call print_string
 
     ; Fill the entire screen with black
