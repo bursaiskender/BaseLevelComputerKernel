@@ -84,6 +84,7 @@ lm_start:
 
     call shell_start
 
+    jmp $
 
 %include "src/utils/macros.asm"
 %include "src/utils/console.asm"
