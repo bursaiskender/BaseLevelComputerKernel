@@ -11,9 +11,12 @@ balecok.iso: bootloader.bin kernel.bin
 	cat kernel.bin >> balecok.bin
 	dd status=noxfer conv=notrunc if=balecok.bin of=balecok.iso
 
-start: balecok.iso
+start-qemu: balecok.iso
 	qemu-system-x86_64 -fda balecok.iso
 
+start-bochs: balecok.iso
+	bochs -q -f .bochsConfig
+	
 startDevEnv: src/* src/bootloader/*.asm src/utils/*.asm
 	geany src/*.asm src/bootloader/*.asm src/utils/*.asm
 clean:
