@@ -71,7 +71,10 @@ rm_start: ; Starting process
     int 0x13
 
     jc read_failed
-
+    
+    cmp al, sectors
+    jne read_failed
+    
     jmp dword BASE:0x0
 
 reset_failed:
