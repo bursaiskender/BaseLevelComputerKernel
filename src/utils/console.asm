@@ -145,3 +145,16 @@ print_int:
         pop rax
 
         ret
+
+goto_next_line:
+    push rax
+
+    mov rax, [current_line]
+    inc rax
+    mov [current_line], rax
+
+    mov qword [current_column], 0
+
+    pop rax
+
+    ret
