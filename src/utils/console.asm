@@ -94,6 +94,11 @@ print_int_normal:
     mov dl, STYLE(BLACK_F, WHITE_B)
     call print_int
 
+    call int_str_length
+    mov rbx, [current_column]
+    add rbx, rax
+    mov [current_column], rbx
+    
     pop rdi
     pop rdx
 

@@ -82,7 +82,6 @@ sysinfo_command:
 
     mov r8, r15
     and r8, 0xF
-
     call print_int_normal
 
     call goto_next_line
@@ -90,22 +89,26 @@ sysinfo_command:
     mov r9, sysinfo_model_length
     call print_normal
 
+    ; model id
     mov r14, r15
     and r14, 0xF0
     shr r14, 4
- 
+
+    ; family id
     mov r13, r15
     and r13, 0xF00
     shr r13, 8
-    
+
+    ; extended model id
     mov r12, r15
     and r12, 0xF0000
     shr r12, 12
-    
+
+    ; extended family id
     mov r11, r15
     and r11, 0xFF00000
     shr r11, 16
-    
+
     mov r8, r14
     add r8, r12
     call print_int_normal
@@ -118,7 +121,9 @@ sysinfo_command:
     mov r8, r13
     add r8, r11
     call print_int_normal
-    
+
+    ; Features
+
     call goto_next_line
     mov r8, sysinfo_features
     mov r9, sysinfo_features_length
@@ -126,7 +131,7 @@ sysinfo_command:
 
     mov eax, 1
     cpuid
-    
+
     TEST_FEATURE ht, rdx, 28
     TEST_FEATURE fpu, rdx, 0
     TEST_FEATURE mmx, rdx, 23
@@ -137,8 +142,8 @@ sysinfo_command:
     TEST_FEATURE sse4_2, rcx, 20
     TEST_FEATURE avx, rcx, 28
     TEST_FEATURE aes, rcx, 25
-    
-    .frequency:
+
+    ; Frequency
 
     call goto_next_line
 
@@ -181,27 +186,38 @@ sysinfo_command:
     add rbx, rcx
 
     mov r8, rbx
-    call set_current_position
+    call print_int_normal
+
+    mov r8, sysinfo_frequency_unit
+    mov r9, sysinfo_frequency_unit
+    call print_normal
+
+    ; rbx = max_frequency
 
     mov eax, 0x06
     cpuid
     and ecx, 1b
     test ecx, ecx
     je .last
-    
+
     call goto_next_line
 
     mov r8, sysinfo_current_frequency
     mov r9, sysinfo_current_frequency_length
     call print_normal
 
+    ; read MPERF
     mov rcx, 0xe7
     rdmsr
-    mov rcx, 0xe8
 
+    ; read APERF
+    mov rcx, 0xe8
     rdmsr
 
     .last:
+
+    ; L2 Length
+
     call goto_next_line
 
     mov r8, sysinfo_l2
@@ -217,7 +233,11 @@ sysinfo_command:
 
     mov r8, rcx
     call print_int_normal
-    
+
+    mov r8, sysinfo_l2_unit
+    mov r9, sysinfo_l2_unit_length
+    call print_normal
+
     pop r10
     pop rdx
     pop rcx
@@ -227,6 +247,7 @@ sysinfo_command:
     sub rsp, 20
     leave
     ret
+
     
 reboot_command:
     in al, 0x64
@@ -371,6 +392,8 @@ STRING sysinfo_ht, "ht "
 STRING sysinfo_avx, "avx "
 STRING sysinfo_fpu, "fpu "
 STRING sysinfo_aes, "aes "
+STRING sysinfo_frequency_unit, "Mhz"
+STRING sysinfo_l2_unit, "KB"
 STRING sysinfo_cpu_brand, "CPU Brand: "
 STRING sysinfo_max_frequency, "Max Frequency: "
 STRING sysinfo_current_frequency, "Current Frequency: "
