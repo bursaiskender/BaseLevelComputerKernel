@@ -25,8 +25,11 @@ key_entered:
     jnz .end_handler
 
     ; ENTER key
-    cmp al, 28
-    je .new_command
+    cmp al, 0x1C
+    je .enter
+    
+    cmp al, 0x0E
+    je .backspace
 
     call key_to_ascii
 
@@ -44,7 +47,7 @@ key_entered:
 
     jmp .end_handler
 
-    .new_command:
+    .enter:
         call goto_next_line
 
         mov r8, [current_input_length]
@@ -131,7 +134,25 @@ key_entered:
             mov r8, command_line
             mov r9, command_line_length
             call print_normal
+            jmp .end_handler
 
+    .backspace:
+
+        mov r8, [current_input_length]
+        test r8, r8
+        je .end_handler
+
+        dec r8
+        mov [current_input_length], r8
+
+        mov r13, [current_column]
+        dec r13
+        mov [current_column], r13
+
+        call set_current_position
+        mov al, ' '
+        stosb
+    
     .end_handler:
 
     ret
