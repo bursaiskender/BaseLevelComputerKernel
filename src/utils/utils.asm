@@ -6,15 +6,6 @@ int_str_length:
     mov rax, r8
 
     xor rsi, rsi
-        mov rbx, 10
-        div rbx
-        add rdx, 48
-
-        inc rsi
-
-        test rax, rax
-        jne .loop
-
 
     .loop:
         xor rdx, rdx
@@ -24,7 +15,7 @@ int_str_length:
 
         inc rsi
 
-        cmp rax, 0
+        test rax, rax
         jne .loop
 
     .exit:

@@ -17,7 +17,7 @@ start-qemu: balecok.iso
 start-bochs: balecok.iso
 	bochs -q -f .bochsConfig
 	
-startDevEnv: src/* src/bootloader/*.asm src/utils/*.asm
+devEnv: src/* src/bootloader/*.asm src/utils/*.asm
 	geany src/*.asm src/bootloader/*.asm src/utils/*.asm
 clean:
 	rm -rf bootloader.bin

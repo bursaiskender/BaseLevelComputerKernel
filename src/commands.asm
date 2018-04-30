@@ -1,3 +1,31 @@
+STRING sysinfo_vendor_id, "Vendor ID: "
+STRING sysinfo_stepping, "Stepping: "
+STRING sysinfo_model, "Model: "
+STRING sysinfo_family, "Family: "
+STRING sysinfo_features, "Features: "
+STRING sysinfo_mmx, "mmx "
+STRING sysinfo_sse, "sse "
+STRING sysinfo_sse2, "sse2 "
+STRING sysinfo_sse3, "sse3 "
+STRING sysinfo_sse4_1, "sse4_1 "
+STRING sysinfo_sse4_2, "sse4_2 "
+STRING sysinfo_ht, "ht "
+STRING sysinfo_avx, "avx "
+STRING sysinfo_fpu, "fpu "
+STRING sysinfo_aes, "aes "
+STRING sysinfo_frequency_unit, "Mhz"
+STRING sysinfo_l2_unit, "KB"
+STRING sysinfo_cpu_brand, "CPU Brand: "
+STRING sysinfo_max_frequency, "Max Frequency: "
+STRING sysinfo_current_frequency, "Current Frequency: "
+STRING devinfo_author, "Batuhan Osman Taskaya - @BTaskaya on github -"
+STRING devinfo_repo, "github.com/BaLeCoK/BaseLevelComputerKernel"
+STRING sysinfo_l2, "L2 Cache Size: "
+STRING available_commands, "Available commands: "
+STRING uptime_message, "Uptime (s): "
+STRING tab, "  "
+STRING colon, ":"
+
 %macro TEST_FEATURE 3
     mov r15, %2
     and r15, 1 << %3
@@ -195,25 +223,22 @@ sysinfo_command:
     ; rbx = max_frequency
 
     call goto_next_line
-
+    
     mov r8, sysinfo_current_frequency
     mov r9, sysinfo_current_frequency_length
     call print_normal
 
-    ; read MPERF
-    rdtscp
     shl rdx, 32
     or rax, rdx
-    mov rcx, rax 
+    mov rcx, rax ; cycles start
 
     mov r8, 100
     call wait_ms ; wait 100ms
 
-    rdtscp
     shl rdx, 32
     or rax, rdx ; cycles end
-    
-    sub rax, rcx 
+
+    sub rax, rcx ; cycles
     imul rax, 10
 
     xor rdx, rdx
@@ -256,7 +281,6 @@ sysinfo_command:
     sub rsp, 20
     leave
     ret
-
     
 reboot_command:
     mov al, 0x64
@@ -536,30 +560,3 @@ clear_command_str db 'clear', 0
 date_command_str db 'date', 0
 uptime_command_str db 'uptime', 0
 help_command_str db 'help', 0
-STRING sysinfo_vendor_id, "Vendor ID: "
-STRING sysinfo_stepping, "Stepping: "
-STRING sysinfo_model, "Model: "
-STRING sysinfo_family, "Family: "
-STRING sysinfo_features, "Features: "
-STRING sysinfo_mmx, "mmx "
-STRING sysinfo_sse, "sse "
-STRING sysinfo_sse2, "sse2 "
-STRING sysinfo_sse3, "sse3 "
-STRING sysinfo_sse4_1, "sse4_1 "
-STRING sysinfo_sse4_2, "sse4_2 "
-STRING sysinfo_ht, "ht "
-STRING sysinfo_avx, "avx "
-STRING sysinfo_fpu, "fpu "
-STRING sysinfo_aes, "aes "
-STRING sysinfo_frequency_unit, "Mhz"
-STRING sysinfo_l2_unit, "KB"
-STRING sysinfo_cpu_brand, "CPU Brand: "
-STRING sysinfo_max_frequency, "Max Frequency: "
-STRING sysinfo_current_frequency, "Current Frequency: "
-STRING devinfo_author, "Batuhan Osman Taskaya - @BTaskaya on github -"
-STRING devinfo_repo, "github.com/BaLeCoK/BaseLevelComputerKernel"
-STRING sysinfo_l2, "L2 Cache Size: "
-STRING available_commands, "Available commands: "
-STRING uptime_message, "Uptime (s): "
-STRING tab, "  "
-STRING colon, ":"
