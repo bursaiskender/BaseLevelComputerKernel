@@ -350,7 +350,116 @@ bcd_to_binary:
     ret
     
 date_command:
-    jmp $
+    push rbp
+    mov rbp, rsp
+    sub rsp, 48
+
+    .restart:
+
+    mov al, [rsp+0]
+    mov [rsp+3], al
+
+    mov al, [rsp+1]
+    mov [rsp+4], al 
+
+    mov al, [rsp+2]
+    mov [rsp+5], al 
+
+    .wait_no_update:
+    mov al, 0x0A
+    out 0x70, al
+
+    in al, 0x71
+    and al, 0x80
+
+    test al, al
+    jnz .wait_no_update
+
+    mov al, 0x00
+    call get_rtc_register
+    mov [rsp+0], al 
+
+    mov al, 0x02
+    call get_rtc_register
+    mov [rsp+1], al 
+
+    mov al, 0x04
+    call get_rtc_register
+    mov [rsp+2], al
+
+    mov al, [rsp+0]
+    mov bl, [rsp+3]
+    cmp al, bl
+    jne .restart
+
+    mov al, [rsp+1]
+    mov bl, [rsp+4]
+    cmp al, bl
+    jne .restart
+
+    mov al, [rsp+2]
+    mov bl, [rsp+5]
+    cmp al, bl
+    jne .restart
+
+    mov al, 0x0B
+    call get_rtc_register
+    and al, 0x04
+    test al, al
+    jnz .normal
+
+    mov al, [rsp+0]
+    call bcd_to_binary
+    mov [rsp+0], al
+
+    mov al, [rsp+1]
+    call bcd_to_binary
+    mov [rsp+1], al
+
+    mov al, [rsp+2]
+    call bcd_to_binary
+    mov [rsp+2], al
+
+    .normal:
+
+    mov al, 0x0B
+    call get_rtc_register
+    and al, 0x02
+    test al, al
+    jz .display
+
+    mov al, [rsp+2]
+    and al, 0x80
+    test al, al
+    jz .display
+
+    mov r8, colon
+    mov r9, colon_length
+    call print_normal
+
+    .display
+
+
+    movzx r8, byte [rsp+2]
+    call print_int_normal
+
+    mov r8, colon
+    mov r9, colon_length
+    call print_normal
+
+    movzx r8, byte [rsp+1]
+    call print_int_normal
+
+    mov r8, colon
+    mov r9, colon_length
+    call print_normal
+
+    movzx r8, byte [rsp+0]
+    call print_int_normal
+
+    sub rsp, 48
+    leave
+    ret
     
 help_command:
     push r8
