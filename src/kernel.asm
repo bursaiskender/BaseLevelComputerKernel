@@ -9,7 +9,7 @@ _start:
 
     cli
 
-    lgdt [GDT64]
+    lgdt [GDTR64]
 
     mov eax, cr0
     or al, 1b
@@ -83,9 +83,7 @@ lm_start:
     
 GDT64:
     NULL_SELECTOR:
-        dw GDT_LENGTH   
-        dw GDT64        
-        dd 0x0
+        dq 0
 
     CODE_SELECTOR:         
         dw 0x0FFFF
@@ -108,6 +106,8 @@ GDT64:
         db  10101111b
         db  0x0
 
-   GDT_LENGTH:
-
+GDTR64:
+    dw 4 * 8 - 1
+    dd GDT64
+    
    times 16384-($-$$) db 0
