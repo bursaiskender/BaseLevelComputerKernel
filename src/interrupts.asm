@@ -119,4 +119,4 @@ IDT64:
 
 IDTR64:
     dw (256 * 16) - 1  
-    dd IDT64              
+    dq IDT64              
