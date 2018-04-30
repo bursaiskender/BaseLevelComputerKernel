@@ -56,7 +56,7 @@ _irq%1:
     cli
 
     mov rax, [irq_handlers + 8 *%1]
-    cmp rax, 0
+    test rax, rax
 
     je .eoi
     call rax
@@ -64,7 +64,7 @@ _irq%1:
     .eoi:
 
     mov rax, %1 
-    cmp rax, 8
+    test rax, rax
     jl .master
 
 

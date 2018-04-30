@@ -69,7 +69,7 @@ print_string:
 .repeat:
     mov al, [rbx]
 
-    cmp al, 0
+    test al, al
     je .done
 
     stosb
@@ -120,11 +120,11 @@ print_int:
         push rdx
         inc rsi
 
-        cmp rax, 0
+        test rax, rax
         jne .loop
 
     .next:
-        cmp rsi, 0
+        test rsi, rsi
         je .exit
         dec rsi
 

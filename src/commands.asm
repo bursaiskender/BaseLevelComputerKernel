@@ -1,7 +1,7 @@
 %macro TEST_FEATURE 3
     mov r15, %2
     and r15, 1 << %3
-    cmp r15, 0
+    test r15, r15
     je .%1_end
 
     mov r8, sysinfo_%1
@@ -159,7 +159,7 @@ sysinfo_command:
     .next_char:
         mov bl, [rax]
         inc rax
-        cmp bl, 0
+        test bl, bl
         jne .next_char
 
     xor rbx, rbx
@@ -186,7 +186,7 @@ sysinfo_command:
     mov eax, 0x06
     cpuid
     and ecx, 1b
-    cmp ecx, 0
+    test ecx, ecx
     je .last
     
     call goto_next_line
