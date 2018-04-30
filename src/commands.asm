@@ -194,12 +194,6 @@ sysinfo_command:
 
     ; rbx = max_frequency
 
-    mov eax, 0x06
-    cpuid
-    and ecx, 1b
-    test ecx, ecx
-    je .last
-
     call goto_next_line
 
     mov r8, sysinfo_current_frequency
@@ -207,12 +201,27 @@ sysinfo_command:
     call print_normal
 
     ; read MPERF
-    mov rcx, 0xe7
-    rdmsr
+    rdtscp
+    shl rdx, 32
+    or rax, rdx
+    mov rcx, rax 
 
-    ; read APERF
-    mov rcx, 0xe8
-    rdmsr
+    mov r8, 100
+    call wait_ms ; wait 100ms
+
+    rdtscp
+    shl rdx, 32
+    or rax, rdx ; cycles end
+    
+    sub rax, rcx 
+    imul rax, 10
+
+    xor rdx, rdx
+    mov rcx, 1000000
+    div rcx
+
+    mov r8, rax
+    call print_int_normal
 
     .last:
 
@@ -264,7 +273,7 @@ devinfo_command:
     call print_normal
     
     call goto_next_line
-    
+        
     mov r8, devinfo_repo
     mov r9, devinfo_repo_length
     call print_normal
