@@ -31,11 +31,11 @@ STRING isr29_msg, "29: Reserved Exception "
 STRING isr30_msg, "30: Reserved Exception "
 STRING isr31_msg, "31: Reserved Exception "
 
+
 %macro CREATE_ISR 1
 _isr%1:
-    
-    cli 
-    
+    cli
+
     push r8
     push r9
 
@@ -43,16 +43,43 @@ _isr%1:
     mov r9, isr%1_msg_length
     call print_normal
 
-    hlt 
-    
+    hlt
+
     pop r9
     pop r8
 
     iretq
 %endmacro
 
-%macro IDT_SET_GATE 4
+%macro CREATE_IRQ 1
+_irq%1:
+    cli
 
+    mov rax, [irq_handlers + 8 *%1]
+    cmp rax, 0
+
+    je .eoi
+    call rax
+
+    .eoi:
+
+    mov rax, %1 
+    cmp rax, 8
+    jl .master
+
+
+    mov al, 0x20
+    out 0xA0, al
+
+    .master:
+
+    mov al, 0x20
+    out 0x20, al
+
+    iretq
+%endmacro
+
+%macro IDT_SET_GATE 4
     lea rdi, [IDT64 + %1 * 16]
 
     mov rax, %2
@@ -62,11 +89,10 @@ _isr%1:
     mov byte [rdi+5], %4 
 
     shr rax, 16
-    mov word [rdi+6], ax 
+    mov word [rdi+6], ax
     shr rax, 16
     mov dword [rdi+8], eax 
     mov dword [rdi+12], 0  
-
 %endmacro
 
 %assign i 0
@@ -74,6 +100,13 @@ _isr%1:
 CREATE_ISR i
 %assign i i+1
 %endrep
+
+%assign i 0
+%rep 16
+CREATE_IRQ i
+%assign i i+1
+%endrep
+
 
 install_idt:
     lidt [IDTR64]
@@ -115,9 +148,58 @@ install_isrs:
     IDT_SET_GATE 31, _isr31, LONG_SELECTOR-GDT64, 0x8E
 
     ret
+
+remap_irqs:
+    mov al, 0x11
+    out 0x20, al 
+    out 0xA1, al 
+
+    mov al, 0x20
+    out 0x21, al 
+    mov al, 0x28
+    out 0xA1, al 
+
+    mov al, 0x04
+    out 0x21, al 
+    mov al, 0x02
+    out 0xA1, al 
+
+    mov al, 0x01
+    out 0x21, al 
+    out 0xA1, al 
+
+    mov al, 0x00
+    out 0x21, al
+    out 0xA1, al 
+
+    ret
+
+install_irqs:
+    IDT_SET_GATE 32, _irq0, LONG_SELECTOR-GDT64, 0x8E
+    IDT_SET_GATE 33, _irq1, LONG_SELECTOR-GDT64, 0x8E
+    IDT_SET_GATE 34, _irq2, LONG_SELECTOR-GDT64, 0x8E
+    IDT_SET_GATE 35, _irq3, LONG_SELECTOR-GDT64, 0x8E
+    IDT_SET_GATE 36, _irq4, LONG_SELECTOR-GDT64, 0x8E
+    IDT_SET_GATE 37, _irq5, LONG_SELECTOR-GDT64, 0x8E
+    IDT_SET_GATE 38, _irq6, LONG_SELECTOR-GDT64, 0x8E
+    IDT_SET_GATE 39, _irq7, LONG_SELECTOR-GDT64, 0x8E
+    IDT_SET_GATE 40, _irq8, LONG_SELECTOR-GDT64, 0x8E
+    IDT_SET_GATE 41, _irq9, LONG_SELECTOR-GDT64, 0x8E
+    IDT_SET_GATE 42, _irq10, LONG_SELECTOR-GDT64, 0x8E
+    IDT_SET_GATE 43, _irq11, LONG_SELECTOR-GDT64, 0x8E
+    IDT_SET_GATE 44, _irq12, LONG_SELECTOR-GDT64, 0x8E
+    IDT_SET_GATE 45, _irq13, LONG_SELECTOR-GDT64, 0x8E
+    IDT_SET_GATE 46, _irq14, LONG_SELECTOR-GDT64, 0x8E
+    IDT_SET_GATE 47, _irq15, LONG_SELECTOR-GDT64, 0x8E
+
+    ret
+
 IDT64:
     times 256 dq 0,0
 
 IDTR64:
-    dw (256 * 16) - 1  
-    dq IDT64              
+    dw (256 * 16) - 1  ; Limit
+    dq IDT64           ; Base
+
+irq_handlers:
+    times 16 dq 0
