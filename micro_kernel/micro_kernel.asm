@@ -83,6 +83,8 @@ lm_start:
 
     call install_irqs
 
+    call install_syscalls
+    
     sti
     
     call install_timer
