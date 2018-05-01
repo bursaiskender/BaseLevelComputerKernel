@@ -253,10 +253,10 @@ syscall_mmap:
     iretq
     
 IDT64:
-    times 256 dq 0,0
+    times 128 dq 0,0
 
 IDTR64:
-    dw (256 * 16) - 1  ; Limit
+    dw (128 * 16) - 1  ; Limit
     dq IDT64           ; Base
 
 irq_handlers:
