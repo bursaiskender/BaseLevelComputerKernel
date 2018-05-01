@@ -305,13 +305,11 @@ devinfo_command:
     ret
     
 clear_command:
-    ; Print top bar
-    call set_current_position
+    mov rdi, TRAM
     mov rbx, header_title
     mov dl, STYLE(WHITE_F, CYAN_B)
     call print_string
 
-    ; Fill the entire screen with black
     mov rdi, TRAM + 0x14 * 8
     mov rcx, 0x14 * 24
     mov rax, 0x0720072007200720
@@ -487,6 +485,7 @@ date_command:
     
 load_command:
     call 0x5000
+    call clear_command
     ret
 
 read_command:
