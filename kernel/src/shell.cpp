@@ -97,9 +97,7 @@ void exec_command(){
         }
     }
 
-    k_print("The command \"");
-    k_print(current_input);
-    k_print("\" does not exist \n");
+    k_printf("The command \"%s\" does not exist\n", current_input);
 }
 
 void clear_command(const char*){
