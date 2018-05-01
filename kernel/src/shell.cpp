@@ -148,17 +148,15 @@ void date_command(const char*){
     uint8_t month;
     unsigned int year;
 
-    uint8_t century;
     uint8_t last_second;
     uint8_t last_minute;
     uint8_t last_hour;
     uint8_t last_day;
     uint8_t last_month;
     uint8_t last_year;
-    uint8_t last_century;
     uint8_t registerB;
 
-    while (get_update_in_progress_flag()){};         
+    while (get_update_in_progress_flag()){};                
 
     second = get_RTC_register(0x00);
     minute = get_RTC_register(0x02);
@@ -167,10 +165,6 @@ void date_command(const char*){
     month = get_RTC_register(0x08);
     year = get_RTC_register(0x09);
 
-    if(century_register != 0) {
-        century = get_RTC_register(century_register);
-    }
-
     do {
         last_second = second;
         last_minute = minute;
@@ -178,9 +172,8 @@ void date_command(const char*){
         last_day = day;
         last_month = month;
         last_year = year;
-        last_century = century;
 
-        while (get_update_in_progress_flag()){};           
+        while (get_update_in_progress_flag()){};         
 
         second = get_RTC_register(0x00);
         minute = get_RTC_register(0x02);
@@ -188,15 +181,11 @@ void date_command(const char*){
         day = get_RTC_register(0x07);
         month = get_RTC_register(0x08);
         year = get_RTC_register(0x09);
-
-        if(century_register != 0) {
-            century = get_RTC_register(century_register);
-        }
     } while( (last_second != second) || (last_minute != minute) || (last_hour != hour) ||
-        (last_day != day) || (last_month != month) || (last_year != year) ||
-        (last_century != century) );
+        (last_day != day) || (last_month != month) || (last_year != year) );
 
     registerB = get_RTC_register(0x0B);
+
 
     if (!(registerB & 0x04)) {
         second = (second & 0x0F) + ((second / 16) * 10);
@@ -206,20 +195,14 @@ void date_command(const char*){
         month = (month & 0x0F) + ((month / 16) * 10);
         year = (year & 0x0F) + ((year / 16) * 10);
 
-        if(century_register != 0) {
-            century = (century & 0x0F) + ((century / 16) * 10);
-        }
     }
 
     if (!(registerB & 0x02) && (hour & 0x80)) {
         hour = ((hour & 0x7F) + 12) % 24;
     }
-
-    if(century_register != 0) {
-        year += century * 100;
-    } else {
-        year += (CURRENT_YEAR / 100) * 100;
-        if(year < CURRENT_YEAR) year += 100;
+    year += (CURRENT_YEAR / 100) * 100;
+    if(year < CURRENT_YEAR){
+        year += 100;
     }
 
     k_print((std::size_t) day);
@@ -238,6 +221,7 @@ void date_command(const char*){
 
     k_print_line();
 }
+
 
 void sleep_command(const char* params){
     const char* delay_str = params + 6;
