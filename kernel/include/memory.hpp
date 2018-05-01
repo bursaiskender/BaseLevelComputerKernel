@@ -16,5 +16,6 @@ std::size_t mmap_entry_count();
 const mmapentry& mmap_entry(std::size_t i);
 void init_memory_manager();
 std::size_t* k_malloc(std::size_t bytes);
+void k_free(std::size_t* block);
 
 #endif
