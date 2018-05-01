@@ -43,13 +43,7 @@ force_look:
 	true
 	
 clean:
-	rm -rf bootloader/*.bin
-	rm -rf bootloader/*.o
-	rm -rf bootloader/*.g
-	rm -rf micro_kernel/*.bin
-	rm -rf micro_kernel/*.o
-	rm -rf micro_kernel/*.g
-	rm -rf kernel/*.bin
-	rm -rf kernel/*.o
-	rm -rf kernel/*.g
+	cd bootloader; $(MAKE) clean
+	cd kernel; $(MAKE) clean
+	cd micro_kernel; $(MAKE) clean
 	rm -rf *.bin *.o *.g *.iso
