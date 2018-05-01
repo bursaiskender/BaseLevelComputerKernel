@@ -87,8 +87,6 @@ lm_start:
     
     sti
     
-    call install_timer
-
     call 0x5000
 
     jmp $
@@ -96,7 +94,6 @@ lm_start:
 %include "micro_kernel/utils/macros.asm"
 %include "micro_kernel/utils/console.asm"
 
-%include 'micro_kernel/timer.asm'
 %include "micro_kernel/interrupts.asm"
 %include "micro_kernel/shell.asm"
 

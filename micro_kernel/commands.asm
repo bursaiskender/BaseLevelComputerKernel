@@ -220,34 +220,6 @@ sysinfo_command:
     mov r9, sysinfo_frequency_unit
     call print_normal
 
-    ; rbx = max_frequency
-
-    call goto_next_line
-    
-    mov r8, sysinfo_current_frequency
-    mov r9, sysinfo_current_frequency_length
-    call print_normal
-
-    shl rdx, 32
-    or rax, rdx
-    mov rcx, rax ; cycles start
-
-    mov r8, 100
-    call wait_ms ; wait 100ms
-
-    shl rdx, 32
-    or rax, rdx ; cycles end
-
-    sub rax, rcx ; cycles
-    imul rax, 10
-
-    xor rdx, rdx
-    mov rcx, 1000000
-    div rcx
-
-    mov r8, rax
-    call print_int_normal
-
     .last:
 
     ; L2 Length
@@ -318,22 +290,6 @@ clear_command:
     ; Line 0 is for header
     mov qword [current_line], 0
     mov qword [current_column], 0
-
-    ret
-
-uptime_command:
-    push r8
-    push r9
-
-    mov r8, uptime_message
-    mov r9, uptime_message_length
-    call print_normal
-
-    mov r8, [timer_seconds]
-    call print_int_normal
-
-    pop r9
-    pop r8
 
     ret
 
@@ -569,7 +525,7 @@ help_command:
     ret
     
 command_table:
-    dq 9
+    dq 8
 
     dq sysinfo_command_str
     dq sysinfo_command
@@ -582,9 +538,6 @@ command_table:
     
     dq clear_command_str
     dq clear_command
-    
-    dq uptime_command_str
-    dq uptime_command
     
     dq date_command_str
     dq date_command
@@ -603,7 +556,6 @@ reboot_command_str db  'reboot', 0
 devinfo_command_str db 'devinfo', 0
 clear_command_str db 'clear', 0
 date_command_str db 'date', 0
-uptime_command_str db 'uptime', 0
 read_command_str db 'read', 0
 load_command_str db 'load', 0
 help_command_str db 'help', 0
