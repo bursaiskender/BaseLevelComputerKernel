@@ -41,15 +41,16 @@ struct fake_head {
     std::size_t size_2;
 };
 
+const std::size_t META_SIZE = sizeof(malloc_header_chunk) + sizeof(malloc_footer_chunk);
+const std::size_t MIN_SPLIT = 32;
+const std::size_t BLOCK_SIZE = 4096;
+const std::size_t MIN_BLOCKS = 4;
+
 fake_head head;
 malloc_header_chunk* malloc_head = 0;
 
 std::size_t* allocate_block(std::size_t bytes){
-    // unutma beni
-    }
-
-const std::size_t META_SIZE = sizeof(malloc_header_chunk) + sizeof(malloc_footer_chunk);
-const std::size_t MIN_SPLIT = 32;
+}
 
 } 
 
@@ -61,9 +62,9 @@ void init_memory_manager(){
 
     malloc_head = (malloc_header_chunk*) &head;
 
-    std::size_t* block = allocate_block(16384);
+    std::size_t* block = allocate_block(MIN_BLOCKS * BLOCK_SIZE);
     malloc_header_chunk* header = (malloc_header_chunk*) block;
-    header->size = 16384 - META_SIZE;
+    header->size = MIN_BLOCKS * BLOCK_SIZE - META_SIZE;
     header->next  = malloc_head;
     header->prev = malloc_head;
 
@@ -75,12 +76,23 @@ void init_memory_manager(){
 }
 
 std::size_t* k_malloc(std::size_t bytes){
-    std::size_t required_bytes = bytes + META_SIZE;
-
     malloc_header_chunk* current = malloc_head->next;
 
     while(true){
         if(current == malloc_head){
+
+            std::size_t* block = allocate_block(MIN_BLOCKS * BLOCK_SIZE);
+            malloc_header_chunk* header = (malloc_header_chunk*) block;
+            header->size = MIN_BLOCKS * BLOCK_SIZE - META_SIZE;
+
+            current->next->prev = header;
+            current->next = header;
+
+            header->next  = current->next;
+            header->prev = current;
+
+            auto footer = (malloc_footer_chunk*) (block +  header->size);
+            footer->size = header->size;
         } else if(current->size >= bytes){
 
             if(current->size - bytes - META_SIZE > MIN_SPLIT){
@@ -114,6 +126,8 @@ std::size_t* k_malloc(std::size_t bytes){
                 return (std::size_t*) current + sizeof(malloc_header_chunk);
             }
         }
+
+        current = current->next;
     }
 }
 
