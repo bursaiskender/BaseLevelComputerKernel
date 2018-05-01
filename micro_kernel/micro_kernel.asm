@@ -158,7 +158,6 @@ lm_start:
 %include "utils/console.asm"
 
 %include "interrupts.asm"
-%include "shell.asm"
 
 
 GDT64:
