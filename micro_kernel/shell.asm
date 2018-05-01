@@ -3,8 +3,6 @@
 %include "commands.asm"
 
 shell_start:
-    call clear_command
-
     call goto_next_line
 
     mov r8, command_line
