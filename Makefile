@@ -4,14 +4,15 @@ KERNEL_SRC=$(wildcard src/*.asm)
 KERNEL_UTILS_SRC=$(wildcard src/utils/*.asm)
 
 bootloader.bin: src/bootloader/balecokBaseBootloader.asm
-	nasm -f bin -o bootloader.bin src/bootloader/balecokBaseBootloader.asm
+	nasm -w+all -f bin -o bootloader.bin src/bootloader/balecokBaseBootloader.asm
 
 micro_kernel.bin: $(KERNEL_SRC) $(KERNEL_UTILS_SRC)
-	nasm -f bin -o micro_kernel.bin src/micro_kernel.asm
+	nasm -w+all -f bin -o micro_kernel.bin src/micro_kernel.asm
+	nasm -D DEBUG -g -w+all -f elf64 -o micro_kernel.g src/micro_kernel.asm
 
-kernel.o: src/kernel.cpp
-	g++ -O2 -std=c++11 -Wall -Wextra -fno-exceptions -fno-rtti -ffreestanding -c src/kernel.cpp -o kernel.o
-	
+kernel.o: kernel/src/kernel.cpp
+	g++ -masm=intel -Ikernel/include/ -O2 -std=c++11 -Wall -Wextra -fno-exceptions -fno-rtti -ffreestanding -c kernel/src/kernel.cpp -o kernel.o 
+ 
 kernel.bin: kernel.o
 	g++ -std=c++11 -T linker.ld -o kernel.bin.o -ffreestanding -O2 -nostdlib kernel.o
 	objcopy -R .note -R .comment -S -O binary kernel.bin.o kernel.bin
@@ -32,7 +33,7 @@ start-bochs: balecok.iso
 	bochs -q -f .bochsConfig
 	
 devEnv: src/* src/bootloader/*.asm src/utils/*.asm
-	geany src/*.asm src/bootloader/*.asm src/utils/*.asm src/*.cpp
+	geany src/*.asm src/bootloader/*.asm src/utils/*.asm kernel/src/*.cpp
 	
 clean:
 	rm -rf bootloader.bin

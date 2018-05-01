@@ -1,5 +1,8 @@
 [BITS 16]
+
+%ifndef DEBUG
 [ORG 0x1000]
+%endif
 
 jmp _start
 
@@ -84,7 +87,7 @@ lm_start:
     
     call install_timer
 
-    call shell_start
+    call 0x5000
 
     jmp $
 
