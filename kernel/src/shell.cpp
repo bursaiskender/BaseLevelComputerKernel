@@ -7,6 +7,7 @@
 #include "console.hpp"
 #include "shell.hpp"
 #include "timer.hpp"
+#include "utils.hpp"
 
 namespace {
 
@@ -282,8 +283,9 @@ void date_command(const char*){
     k_print_line();
 }
 
-void sleep_command(const char*){
-    sleep_ms(5000);
+void sleep_command(const char* params){
+    const char* delay_str = params + 6;
+    sleep_ms(parse(delay_str) * 1000);
 }
 
 void echo_command(const char* params){
