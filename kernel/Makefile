@@ -1,4 +1,4 @@
-KERNEL_FLAGS=-masm=intel -Iinclude/ -O1 -std=c++11 -Wall -Wextra -fno-exceptions -fno-rtti -ffreestanding -fno-stack-protector
+KERNEL_FLAGS=-masm=intel -Iinclude/ -O1 -std=c++11 -Wall -Wextra -fno-exceptions -fno-rtti -pedantic -Wold-style-cast -Wshadow -ffreestanding -fno-stack-protector
 KERNEL_LINK_FLAGS=-std=c++11 -T linker.ld -ffreestanding -O1 -nostdlib -fno-stack-protector
 
 KERNEL_O_FILES=kernel.o keyboard.o console.o kernel_utils.o timer.o shell.o utils.o memory.o
