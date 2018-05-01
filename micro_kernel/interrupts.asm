@@ -202,6 +202,21 @@ register_irq_handler:
     mov [irq_handlers + r8 * 8], r9
 
     ret
+
+syscall_reboot:
+    cli
+
+    push rax
+
+    mov al, 0x64
+    or al, 0xFE
+    out 0x64, al
+    mov al, 0xFE
+    out 0x64, al
+
+    pop rax
+
+    iretq
     
 IDT64:
     times 256 dq 0,0
