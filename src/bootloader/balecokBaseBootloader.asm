@@ -50,6 +50,7 @@ rm_start: ; Starting process
         call print_line_16
         ASM_KERNEL_BASE equ 0x100
         sectors equ 0x20
+        bootdev equ 0x0
         
     xor ax, ax
     xor ah, ah
@@ -67,7 +68,7 @@ rm_start: ; Starting process
     xor ch, ch          ; cylinder 0
     mov cl, 2           ; sector 2
     xor dh, dh          ; head 0
-    mov dl, [bootdev]   ; drive
+    mov dl, bootdev     ; drive
     int 0x13
 
     jc read_failed
@@ -106,6 +107,5 @@ error_end:
     load_failed db 'Kernel loading failed', 0
     
 ; Boot Sector
-bootdev db 0
 times 510-($-$$) db 0
 dw 0xAA55
