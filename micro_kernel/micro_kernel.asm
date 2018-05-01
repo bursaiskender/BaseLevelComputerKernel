@@ -111,7 +111,7 @@ pm_start:
 
     mov edi, 0x73000 
     mov ebx, 0x3     
-    mov ecx, 512    
+    mov ecx, 256    
 
     .write_entry:
     mov dword [edi], ebx
