@@ -1,14 +1,14 @@
 default: start-qemu
 
-KERNEL_SRC=$(wildcard src/*.asm)
-KERNEL_UTILS_SRC=$(wildcard src/utils/*.asm)
+KERNEL_SRC=$(wildcard micro_kernel/*.asm)
+KERNEL_UTILS_SRC=$(wildcard micro_kernel/utils/*.asm)
 
-bootloader.bin: src/bootloader/balecokBaseBootloader.asm
-	nasm -w+all -f bin -o bootloader.bin src/bootloader/balecokBaseBootloader.asm
+bootloader.bin: bootloader/balecokBaseBootloader.asm
+	nasm -w+all -f bin -o bootloader.bin bootloader/balecokBaseBootloader.asm
 
 micro_kernel.bin: $(KERNEL_SRC) $(KERNEL_UTILS_SRC)
-	nasm -w+all -f bin -o micro_kernel.bin src/micro_kernel.asm
-	nasm -D DEBUG -g -w+all -f elf64 -o micro_kernel.g src/micro_kernel.asm
+	nasm -w+all -f bin -o micro_kernel.bin micro_kernel/micro_kernel.asm
+	nasm -D DEBUG -g -w+all -f elf64 -o micro_kernel.g micro_kernel/micro_kernel.asm
 
 kernel.o: kernel/src/kernel.cpp
 	g++ -masm=intel -Ikernel/include/ -O2 -std=c++11 -Wall -Wextra -fno-exceptions -fno-rtti -ffreestanding -c kernel/src/kernel.cpp -o kernel.o 
@@ -32,9 +32,17 @@ start-qemu: balecok.iso
 start-bochs: balecok.iso
 	bochs -q -f .bochsConfig
 	
-devEnv: src/* src/bootloader/*.asm src/utils/*.asm
-	geany src/*.asm src/bootloader/*.asm src/utils/*.asm kernel/src/*.cpp
+devMicro: 
+	geany $(KERNEL_SRC) $(KERNEL_UTILS_SRC)
 	
+devCpp:
+	geany kernel/src/*.cpp
+
+devBoot:
+	geany bootloader/*.asm
+	
+devEnv:
+	geany src/*.asm src/utils/*.asm bootloader/*.asm kernel/src/*.cpp
 clean:
 	rm -rf bootloader.bin
 	rm -rf balecok.bin

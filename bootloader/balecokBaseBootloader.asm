@@ -2,7 +2,7 @@
 
 jmp rm_start
 
-%include "src/utils/intel_16.asm" ; Include common functions
+%include "bootloader/intel_16.asm" ; Include common functions
 
 
 rm_start: ; Starting process

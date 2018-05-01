@@ -1,6 +1,6 @@
-%include "src/utils/utils.asm"
-%include "src/utils/keyboard.asm"
-%include "src/commands.asm"
+%include "micro_kernel/utils/utils.asm"
+%include "micro_kernel/utils/keyboard.asm"
+%include "micro_kernel/commands.asm"
 
 shell_start:
     call clear_command
