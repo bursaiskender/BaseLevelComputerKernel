@@ -327,159 +327,6 @@ bcd_to_binary:
 
     ret
     
-date_command:
-    push rbp
-    mov rbp, rsp
-    sub rsp, 48
-
-    .restart:
-
-    mov al, [rsp+0]
-    mov [rsp+3], al
-
-    mov al, [rsp+1]
-    mov [rsp+4], al 
-
-    mov al, [rsp+2]
-    mov [rsp+5], al 
-
-    .wait_no_update:
-    mov al, 0x0A
-    out 0x70, al
-
-    in al, 0x71
-    and al, 0x80
-
-    test al, al
-    jnz .wait_no_update
-
-    mov al, 0x00
-    call get_rtc_register
-    mov [rsp+0], al 
-
-    mov al, 0x02
-    call get_rtc_register
-    mov [rsp+1], al 
-
-    mov al, 0x04
-    call get_rtc_register
-    mov [rsp+2], al
-
-    mov al, [rsp+0]
-    mov bl, [rsp+3]
-    cmp al, bl
-    jne .restart
-
-    mov al, [rsp+1]
-    mov bl, [rsp+4]
-    cmp al, bl
-    jne .restart
-
-    mov al, [rsp+2]
-    mov bl, [rsp+5]
-    cmp al, bl
-    jne .restart
-
-    mov al, 0x0B
-    call get_rtc_register
-    and al, 0x04
-    test al, al
-    jnz .normal
-
-    mov al, [rsp+0]
-    call bcd_to_binary
-    mov [rsp+0], al
-
-    mov al, [rsp+1]
-    call bcd_to_binary
-    mov [rsp+1], al
-
-    mov al, [rsp+2]
-    call bcd_to_binary
-    mov [rsp+2], al
-
-    .normal:
-
-    mov al, 0x0B
-    call get_rtc_register
-    and al, 0x02
-    test al, al
-    jz .display
-
-    mov al, [rsp+2]
-    and al, 0x80
-    test al, al
-    jz .display
-
-    mov r8, colon
-    mov r9, colon_length
-    call print_normal
-
-    .display:
-
-
-    movzx r8, byte [rsp+2]
-    call print_int_normal
-
-    mov r8, colon
-    mov r9, colon_length
-    call print_normal
-
-    movzx r8, byte [rsp+1]
-    call print_int_normal
-
-    mov r8, colon
-    mov r9, colon_length
-    call print_normal
-
-    movzx r8, byte [rsp+0]
-    call print_int_normal
-
-    sub rsp, 48
-    leave
-    ret
-    
-load_command:
-    mov rdi, TRAM
-    mov rcx, 0x14 * 25
-    mov rax, 0x0720072007200720
-    rep stosq
-    call 0x5000
-    
-    jmp $
-    call clear_command
-    ret
-
-read_command:
-    mov r12, 0x5000
-    xor r13, r13
-    xor r14, r14
-
-    .restart:
-    movzx r8, word [r12]
-    call print_int_normal
-
-    mov r8, colon
-    mov r9, 1
-    call print_normal
-
-    add r12, 2
-
-    inc r13
-
-    cmp r13, 8
-    jne .restart
-
-    call goto_next_line
-
-    xor r13, r13
-    inc r14
-
-    cmp r14, 16
-    jne .restart
-
-    ret
-    
 help_command:
     push r8
     push r9
@@ -525,7 +372,7 @@ help_command:
     ret
     
 command_table:
-    dq 8
+    dq 5
 
     dq sysinfo_command_str
     dq sysinfo_command
@@ -539,15 +386,6 @@ command_table:
     dq clear_command_str
     dq clear_command
     
-    dq date_command_str
-    dq date_command
-    
-    dq read_command_str
-    dq read_command
-    
-    dq load_command_str
-    dq load_command 
-    
     dq help_command_str
     dq help_command
     
@@ -555,7 +393,4 @@ sysinfo_command_str db 'sysinfo', 0
 reboot_command_str db  'reboot', 0
 devinfo_command_str db 'devinfo', 0
 clear_command_str db 'clear', 0
-date_command_str db 'date', 0
-read_command_str db 'read', 0
-load_command_str db 'load', 0
 help_command_str db 'help', 0
