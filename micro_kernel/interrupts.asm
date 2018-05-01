@@ -231,7 +231,7 @@ syscall_reboot:
 syscall_mmap:
     cli
 
-    .e820_failed
+    .e820_failed:
 
     cmp r8, 0
     jne .entry_count
@@ -239,7 +239,7 @@ syscall_mmap:
     movzx rax, byte [e820_failed]
     iretq
 
-    .entry_count
+    .entry_count:
 
     cmp r8, 1
     jne .e820_mmap
@@ -247,7 +247,7 @@ syscall_mmap:
     movzx rax, word [e820_entry_count]
     iretq
 
-    .e820_mmap
+    .e820_mmap:
 
     mov rax, e820_memory_map
     iretq
