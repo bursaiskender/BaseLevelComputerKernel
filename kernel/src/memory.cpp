@@ -41,18 +41,65 @@ struct fake_head {
     std::size_t size_2;
 };
 
-const std::size_t META_SIZE = sizeof(malloc_header_chunk) + sizeof(malloc_footer_chunk);
-const std::size_t MIN_SPLIT = 32;
-const std::size_t BLOCK_SIZE = 4096;
-const std::size_t MIN_BLOCKS = 4;
-
 fake_head head;
 malloc_header_chunk* malloc_head = 0;
 
-std::size_t* allocate_block(std::size_t bytes){
+typedef std::size_t* page_entry;
+typedef page_entry* page_table;
+typedef page_table* page_directory_table;
+typedef page_directory_table* page_directory_pointer_table;
+typedef page_directory_pointer_table* pml4t_t;
+
+mmapentry* current_mmap_entry;
+std::size_t current_mmap_entry_position;
+
+std::size_t pml4t_index = 0;
+std::size_t pdpt_index = 0;
+std::size_t pdt_index = 0;
+std::size_t pt_index = 256;
+
+std::size_t* allocate_block(std::size_t blocks){
+    if(!current_mmap_entry){
+        for(std::size_t i = 0; i < entry_count; ++i){
+            auto& entry = e820_mmap[i];
+
+            if(entry.type == 1 && entry.base >= 0x100000 && entry.size >= 16384){
+                current_mmap_entry = &entry;
+                current_mmap_entry_position = entry.base;
+                break;
+            }
+        }
+    }
+
+    if(!current_mmap_entry){
+        return nullptr;
+    }
+
+    pml4t_t pml4t = (pml4t_t) 0x70000;
+    auto pdpt = pml4t[pml4t_index];
+    auto pdt = pdpt[pdpt_index];
+    auto pt = pdt[pdt_index];
+
+    if(pt_index + blocks >= 512){
+        //TODO Go to a new page table
+    }
+
+    for(std::size_t i = 0; i < blocks; ++i){
+        pt[pt_index + i] = (std::size_t*) current_mmap_entry_position + (i * 4096);
+    }
+
+    auto block = (std::size_t*) current_mmap_entry_position;
+
+    pt_index += blocks;
+    current_mmap_entry_position += (blocks * 4096);
+
+    return block;
 }
 
-} 
+const std::size_t META_SIZE = sizeof(malloc_header_chunk) + sizeof(malloc_footer_chunk);
+const std::size_t MIN_SPLIT = 32;
+
+}
 
 void init_memory_manager(){
     head.size = 0;
@@ -62,9 +109,9 @@ void init_memory_manager(){
 
     malloc_head = (malloc_header_chunk*) &head;
 
-    std::size_t* block = allocate_block(MIN_BLOCKS * BLOCK_SIZE);
+    std::size_t* block = allocate_block(16384);
     malloc_header_chunk* header = (malloc_header_chunk*) block;
-    header->size = MIN_BLOCKS * BLOCK_SIZE - META_SIZE;
+    header->size = 16384 - META_SIZE;
     header->next  = malloc_head;
     header->prev = malloc_head;
 
@@ -76,23 +123,12 @@ void init_memory_manager(){
 }
 
 std::size_t* k_malloc(std::size_t bytes){
+    std::size_t required_bytes = bytes + META_SIZE;
+
     malloc_header_chunk* current = malloc_head->next;
 
     while(true){
         if(current == malloc_head){
-
-            std::size_t* block = allocate_block(MIN_BLOCKS * BLOCK_SIZE);
-            malloc_header_chunk* header = (malloc_header_chunk*) block;
-            header->size = MIN_BLOCKS * BLOCK_SIZE - META_SIZE;
-
-            current->next->prev = header;
-            current->next = header;
-
-            header->next  = current->next;
-            header->prev = current;
-
-            auto footer = (malloc_footer_chunk*) (block +  header->size);
-            footer->size = header->size;
         } else if(current->size >= bytes){
 
             if(current->size - bytes - META_SIZE > MIN_SPLIT){
@@ -126,8 +162,6 @@ std::size_t* k_malloc(std::size_t bytes){
                 return (std::size_t*) current + sizeof(malloc_header_chunk);
             }
         }
-
-        current = current->next;
     }
 }
 
