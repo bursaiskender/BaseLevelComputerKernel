@@ -57,7 +57,7 @@ rm_start: ; Starting process
     jc reset_failed
     
     ASM_KERNEL_BASE equ 0x100
-    sectors equ 0x28
+    sectors equ 0x30
     bootdev equ 0x0
         
     mov ax, ASM_KERNEL_BASE
