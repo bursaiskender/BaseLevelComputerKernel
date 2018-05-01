@@ -16,6 +16,7 @@ void uptime_command(const char* params);
 void clear_command(const char* params);
 void date_command(const char* params);
 void sleep_command(const char* params);
+void echo_command(const char* params);
 
 struct command_definition {
     const char* name;
@@ -29,6 +30,7 @@ std::array<command_definition, 7> commands = {{
     {"clear", clear_command},
     {"date", date_command},
     {"sleep", sleep_command},
+    {"echo", echo_command}
 }};
 
 std::size_t current_input_length = 0;
@@ -282,6 +284,10 @@ void date_command(const char* params){
 
 void sleep_command(const char* params){
     sleep_ms(5000);
+}
+
+void echo_command(const char* params){
+    k_print_line(params + 5);
 }
 
 }
