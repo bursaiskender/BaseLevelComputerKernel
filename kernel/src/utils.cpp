@@ -62,3 +62,13 @@ const char* str_from(char* a, char c){
 
     return a;
 }
+
+
+bool str_equals(const char* a, const char* b){
+    while(*a && *a == *b){
+        ++a;
+        ++b;
+    }
+
+    return *a == *b;
+}
