@@ -53,16 +53,14 @@ e820_mmap:
 
     .e820f:
     mov  [e820_entry_count], bp
+
     clc
     popa
-    
     ret
-    
+
     .failed:
     stc
-
     popa
-
     ret
     
 _start:
