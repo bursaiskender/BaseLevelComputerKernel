@@ -1,7 +1,7 @@
 KERNEL_FLAGS=-masm=intel -Iinclude/ -O1 -std=c++11 -Wall -Wextra -fno-exceptions -fno-rtti -ffreestanding -fno-stack-protector
 KERNEL_LINK_FLAGS=-std=c++11 -T linker.ld -ffreestanding -O1 -nostdlib -fno-stack-protector
 
-KERNEL_O_FILES=kernel.o keyboard.o console.o kernel_utils.o timer.o shell.o utils.o
+KERNEL_O_FILES=kernel.o keyboard.o console.o kernel_utils.o timer.o shell.o utils.o memory.o
 
 kernel.bin: $(KERNEL_O_FILES)
 	g++ $(KERNEL_LINK_FLAGS) -o kernel.bin.o $(KERNEL_O_FILES)
@@ -27,7 +27,10 @@ shell.o: src/shell.cpp
 
 utils.o: src/utils.cpp
 	g++ $(KERNEL_FLAGS) -c src/utils.cpp -o utils.o
-	
+
+memory.o: src/memory.cpp
+	g++ $(KERNEL_FLAGS) -c src/memory.cpp -o memory.o
+
 clean:
 	rm -f *.o
 	rm -f *.bin
