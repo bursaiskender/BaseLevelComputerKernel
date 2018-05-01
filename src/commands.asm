@@ -486,7 +486,7 @@ date_command:
     ret
     
 load_command:
-
+    call 0x5000
     ret
 
 read_command:
