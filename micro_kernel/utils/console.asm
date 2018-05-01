@@ -22,46 +22,6 @@ current_line dq 0
 current_column dq 0
 TRAM equ 0x0B8000
 VRAM equ 0x0A0000
-
-set_current_position:
-    push rax
-    push rbx
-    push rdx
-    
-    mov rax, [current_line]
-    mov rbx, 0x14 * 8
-    mul rbx
-
-    mov rbx, [current_column]
-    shl rbx, 1
-
-    lea rdi, [rax + rbx + TRAM]
-
-    pop rdx
-    pop rbx
-    pop rax
-
-    ret
-    
-print_normal:
-    push rbx
-    push rdx
-    push rdi
-
-    call set_current_position
-    mov rbx, r8
-    mov dl, STYLE(BLACK_F, WHITE_B)
-    call print_string
-
-    mov rbx, [current_column]
-    add rbx, r9
-    mov [current_column], rbx
-
-    pop rdi
-    pop rdx
-    pop rbx
-
-    ret
     
 print_string:
     push rax
