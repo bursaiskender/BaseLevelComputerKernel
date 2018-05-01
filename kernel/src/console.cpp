@@ -1,4 +1,5 @@
 #include <cstddef>
+
 #include "console.hpp"
 #include "types.hpp"
 
@@ -48,13 +49,30 @@ long get_column(){
 
 void k_print_line(){
     current_column = 0;
-    ++current_column;
+    ++current_line;
 }
+
 void k_print_line(const char* string){
     k_print(string);
 
     current_column = 0;
     ++current_line;
+}
+
+void k_print(std::size_t number){
+    char buffer[20];
+    int i = 0;
+
+    while(number != 0){
+        buffer[i++] = '0' + number % 10;
+        number /= 10;
+    }
+
+    --i;
+
+    for(; i > 0; --i){
+        k_print(buffer[i]);
+    }
 }
 
 void k_print(char key){
@@ -76,6 +94,9 @@ void k_print(const char* string){
 }
 
 void wipeout(){
+    current_line = 0;
+    current_column = 0;
+
     for(int line = 0; line < 25; ++line){
         for(std::size_t column = 0; column < 80; ++column){
             k_print(' ');

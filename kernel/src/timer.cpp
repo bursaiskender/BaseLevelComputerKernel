@@ -10,7 +10,7 @@ std::size_t _timer_seconds;
 void timer_handler(){
     ++_timer_ticks;
 
-    if(_timer_ticks % 1000 == 0){
+    if(_timer_ticks % 100 == 0){
         ++_timer_seconds;
     }
 }
