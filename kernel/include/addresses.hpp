@@ -1,4 +1,4 @@
 #ifndef ADDRESSES_H
 #define ADDRESSES_H
-#define asm_register_irq_handler 0x271E
+#define asm_register_irq_handler 0x275D
 #endif

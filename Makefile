@@ -63,6 +63,9 @@ clean:
 	rm -rf kernel.bin
 	rm -rf balecok.iso
 	rm -rf kernel.o
+	rm -rf console.o
+	rm -rf kernel_utils.o
+	rm -rf keyboard.o
 	rm -rf kernel.bin.o
 	rm -rf kernel.bin
 	rm -rf micro_kernel.g
