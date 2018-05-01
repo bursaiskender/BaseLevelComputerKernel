@@ -24,8 +24,15 @@ balecok.iso: bootloader.bin micro_kernel.bin kernel.bin filler.bin
 start-qemu: balecok.iso
 	qemu-system-x86_64 -fda balecok.iso
 
-start-bochs: balecok.iso
-	bochs -q -f .bochsConfig
+bochs: balecok.iso
+	echo balecok.iso
+	bochs -qf .bochsConfig -rc commands
+	rm commands
+
+debug: balecok.iso
+	echo "c" > commands
+	bochs -qf .bochsConfig -rc commands
+	rm commands
 	
 devMicro: 
 	geany $(MICRO_KERNEL_SRC) $(MICRO_KERNEL_UTILS_SRC)

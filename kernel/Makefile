@@ -31,6 +31,9 @@ utils.o: src/utils.cpp
 memory.o: src/memory.cpp
 	g++ $(KERNEL_FLAGS) -c src/memory.cpp -o memory.o
 
+balecok.o: src/balecok.cpp
+	g++ $(KERNEL_FLAGS) -c src/balecok.cpp -o balecok.o
+	
 clean:
 	rm -f *.o
 	rm -f *.bin

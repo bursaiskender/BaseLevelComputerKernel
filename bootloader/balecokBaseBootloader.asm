@@ -2,28 +2,27 @@
 
 jmp rm_start
 
-%include "intel_16.asm" ; Include common functions
+%include "intel_16.asm"
 
+; Start in real mode
+rm_start:
+    ; Set stack space (4K) and stack segment
 
-rm_start: ; Starting process
-    
-    ; set stack space and segment
     mov ax, 0x7C0
     add ax, 288
     mov ss, ax
     mov sp, 4096
-    ; set stack space and segment
-    
-    ; set data segments
-    mov ax, 0x7C0 
-    mov ds, ax 
-    ; set data segments
-    
+
+    ; Set data segment
+    mov ax, 0x7C0
+    mov ds, ax
+
     mov ah, 0x01
     mov cx, 0x2607
     int 0x10
-    
-    ; introduce bootloader to user
+
+    ; 2. Welcome the user to the bootloader
+
     call new_line_16
 
     mov si, header_0
@@ -39,47 +38,49 @@ rm_start: ; Starting process
 
     call new_line_16
 
-    ; A20 gate part
+    ; Enable A20 gate
     in al, 0x92
     or al, 2
     out 0x92, al
-    
-    call key_wait ; wait any key for starting process
+
+    ; Wait for any key
+    call key_wait
 
     mov si, load_kernel
     call print_line_16
-        
+
+    ; Reset disk drive
     xor ax, ax
     xor ah, ah
     mov dl, 0
     int 0x13
 
     jc reset_failed
-    
-    ASM_KERNEL_BASE equ 0x100
-    sectors equ 0x30
-    bootdev equ 0x0
-        
-    mov ax, ASM_KERNEL_BASE
+
+    ; Loading the assembly kernel from floppy
+
+    mov ax, 0x90
     mov es, ax
     xor bx, bx
 
-    mov ah, 0x2         ; memory reading for sectors
-    mov al, sectors ; determine the total number of sectors for read
-    xor ch, ch          ; cylinder 0
-    mov cl, 2           ; sector 2
-    xor dh, dh          ; head 0
-    mov dl, bootdev     ; drive
+    mov ah, 0x2         ; Read sectors from memory
+    mov al, 1           ; Number of sectors to read
+    xor ch, ch          ; Cylinder 0
+    mov cl, 2           ; Sector 2
+    xor dh, dh          ; Head 0
+    mov dl, bootdev     ; Drive
     int 0x13
 
     jc read_failed
 
-    cmp al, sectors
+    cmp al, 1
     jne read_failed
 
-    jmp dword ASM_KERNEL_BASE:0x0
+    ; Run the assembly kernel
 
-reset_failed:
+    jmp dword 0x90:0x0
+
+    reset_failed:
     mov si, reset_failed_msg
     call print_line_16
 
@@ -95,7 +96,7 @@ error_end:
 
     jmp $
 
-; Defines
+; defines
 
     header_0 db 'BaLeCoK -> Base Level Computer Kernel', 0
     header_1 db 'Developed and Maintained by @BTaskaya', 0
@@ -106,7 +107,35 @@ error_end:
     reset_failed_msg db 'Disk reseting failed', 0
     read_failed_msg db 'Disk read operation failed', 0
     load_failed db 'Kernel loading failed', 0
-    
-; Boot Sector
-times 510-($-$$) db 0
-dw 0xAA55
+
+; Make a real bootsector
+
+    times 510-($-$$) db 0
+    dw 0xAA55
+
+second_step:
+    ; Reset disk drive
+    xor ax, ax
+    xor ah, ah
+    mov dl, 0
+    int 0x13
+
+    KERNEL_BASE equ 0x100      ; 0x100:0x0 = 0x1000
+    sectors equ 0x40           ; sectors to read
+    bootdev equ 0x0
+
+    mov ax, KERNEL_BASE
+    mov es, ax
+    xor bx, bx
+
+    mov ah, 0x2         ; Read sectors from memory
+    mov al, sectors     ; Number of sectors to read
+    xor ch, ch          ; Cylinder 0
+    mov cl, 3           ; Sector 2
+    xor dh, dh          ; Head 0
+    mov dl, bootdev     ; Drive
+    int 0x13
+
+    jmp dword KERNEL_BASE:0x0
+
+    times 1024-($-$$) db 0
