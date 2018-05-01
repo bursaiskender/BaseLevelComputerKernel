@@ -1,25 +1,27 @@
-ENTRY(_start)
+ENTRY(kernel_main)
 
 SECTIONS
 {
-	. = 0x10000;
-	.text BLOCK(4K) : ALIGN(4K)
+	. = 0x5000;
+
+	.text BLOCK(1K) : ALIGN(1K)
 	{
+		*(main_section)
 		*(.text)
 	}
-	.rodata BLOCK(4K) : ALIGN(4K)
+
+	.rodata BLOCK(1K) : ALIGN(1K)
 	{
 		*(.rodata)
 	}
-	.data BLOCK(4K) : ALIGN(4K)
+
+	.data BLOCK(1K) : ALIGN(1K)
 	{
 		*(.data)
 	}
-	.bss BLOCK(4K) : ALIGN(4K)
-	{
-		*(COMMON)
-		*(.bss)
-		*(.bootstrap_stack)
-	}
 
+	.bss BLOCK(1K) : ALIGN(1K)
+	{
+		*(.bss)
+	}
 }

@@ -10,14 +10,16 @@ micro_kernel.bin: $(KERNEL_SRC) $(KERNEL_UTILS_SRC)
 	nasm -f bin -o micro_kernel.bin src/micro_kernel.asm
 
 kernel.o: src/kernel.cpp
-	g++ -Wall -Wextra -O2 -fno-exceptions -fno-rtti -ffreestanding -c src/kernel.cpp -o kernel.o	
-
+	g++ -O2 -std=c++11 -Wall -Wextra -fno-exceptions -fno-rtti -ffreestanding -c src/kernel.cpp -o kernel.o
+	
 kernel.bin: kernel.o
-	g++ -T linker.ld -o kernel.bin.o -ffreestanding -O2 -nostdlib kernel.o
+	g++ -std=c++11 -T linker.ld -o kernel.bin.o -ffreestanding -O2 -nostdlib kernel.o
 	objcopy -R .note -R .comment -S -O binary kernel.bin.o kernel.bin
+	
+filler.bin: kernel.bin
 	bash prepForLoading.sh
 	
-balecok.iso: bootloader.bin micro_kernel.bin kernel.bin
+balecok.iso: bootloader.bin micro_kernel.bin kernel.bin filler.bin
 	cat bootloader.bin > balecok.bin
 	cat micro_kernel.bin >> balecok.bin
 	cat kernel.bin >> balecok.bin
