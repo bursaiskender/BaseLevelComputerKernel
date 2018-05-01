@@ -54,7 +54,10 @@ e820_mmap:
     .e820f:
     mov  [e820_entry_count], bp
     clc
-
+    popa
+    
+    ret
+    
     .failed:
     stc
 
@@ -69,6 +72,8 @@ _start:
     cli
 
     call e820_mmap
+    setc al
+    mov [e820_failed], al
     
     lgdt [GDTR64]
 
@@ -133,9 +138,13 @@ pm_start:
 [BITS 64]
 
 lm_start:
-    movzx r8, word [e820_entry_count]
+    movzx r8, byte [e820_failed]
+
     call set_current_position
+    
     call print_int_normal
+
+    jmp $
     
     call install_idt
 
@@ -189,6 +198,9 @@ GDTR64:
     dw 4 * 8 - 1 
     dd GDT64
     
+    e820_failed:
+        db 0
+        
     e820_memory_map:
         times 32 dq 0, 0, 0
     
