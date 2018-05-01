@@ -41,7 +41,10 @@ void keyboard_handler(){
 
             k_print("root@balecok $ ");
         } else if(key == 0x0E){
-            
+            set_column(get_column() - 1);
+            k_print(' ');
+            set_column(get_column() - 1);
+            --current_input_length;
         } else {
            auto qwertz_key = key_to_ascii(key);
 
@@ -54,6 +57,10 @@ void keyboard_handler(){
 }
 
 void exec_command(){
+    set_column(get_column() - 1);
+    k_print(' ');
+    set_column(get_column() - 1);
+    --current_input_length;
     k_print("The command \"");
     k_print(current_input);
     k_print_line("\" does not exist");
