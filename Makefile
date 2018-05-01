@@ -43,15 +43,13 @@ force_look:
 	true
 	
 clean:
-	rm -rf bootloader.bin
-	rm -rf balecok.bin
-	rm -rf kernel.bin
-	rm -rf balecok.iso
-	rm -rf kernel.o
-	rm -rf console.o
-	rm -rf kernel_utils.o
-	rm -rf keyboard.o
-	rm -rf timer.o
-	rm -rf kernel.bin.o
-	rm -rf kernel.bin
-	rm -rf micro_kernel.bin
+	rm -rf bootloader/*.bin
+	rm -rf bootloader/*.o
+	rm -rf bootloader/*.g
+	rm -rf micro_kernel/*.bin
+	rm -rf micro_kernel/*.o
+	rm -rf micro_kernel/*.g
+	rm -rf kernel/*.bin
+	rm -rf kernel/*.o
+	rm -rf kernel/*.g
+	rm -rf *.bin *.o *.g *.iso
