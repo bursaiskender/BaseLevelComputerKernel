@@ -1,3 +1,4 @@
+#include <cstddef>
 #include "console.hpp"
 #include "types.hpp"
 
@@ -36,7 +37,10 @@ uint16_t make_vga_entry(char c, uint8_t color){
 }
 
 }
-
+void k_print_line(){
+    current_column = 0;
+    ++current_column;
+}
 void k_print_line(const char* string){
     k_print(string);
 
@@ -60,4 +64,15 @@ void k_print(const char* string){
     }
 
     return;
+}
+
+void wipeout(){
+    for(int line = 0; line < 25; ++line){
+        for(std::size_t column = 0; column < 80; ++column){
+            k_print(' ');
+        }
+    }
+
+    current_line = 0;
+    current_column = 0;
 }
