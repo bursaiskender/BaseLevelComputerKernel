@@ -57,7 +57,7 @@ rm_start: ; Starting process
     jc reset_failed
     
     ASM_KERNEL_BASE equ 0x100
-    asm_sectors equ 0x22
+    sectors equ 0x28
     bootdev equ 0x0
         
     mov ax, ASM_KERNEL_BASE
@@ -65,7 +65,7 @@ rm_start: ; Starting process
     xor bx, bx
 
     mov ah, 0x2         ; memory reading for sectors
-    mov al, asm_sectors ; determine the total number of sectors for read
+    mov al, sectors ; determine the total number of sectors for read
     xor ch, ch          ; cylinder 0
     mov cl, 2           ; sector 2
     xor dh, dh          ; head 0
@@ -74,7 +74,7 @@ rm_start: ; Starting process
 
     jc read_failed
 
-    cmp al, asm_sectors
+    cmp al, sectors
     jne read_failed
 
     jmp dword ASM_KERNEL_BASE:0x0

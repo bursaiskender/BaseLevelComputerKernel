@@ -1,5 +1,8 @@
-#include "addresses.hpp"
 #include <cstddef>
+
+#include "types.hpp"
+#include "addresses.hpp"
+#include "keyboard.hpp"
 
 typedef unsigned int uint8_t __attribute__((__mode__(__QI__)));
 typedef unsigned int uint16_t __attribute__ ((__mode__ (__HI__)));
@@ -27,48 +30,20 @@ void register_irq_handler(void (*handler)()){
         );
 }
 
+void keyboard_handler();
+
+extern "C" {
+void  __attribute__ ((section ("main_section"))) kernel_main(){
+    k_print("root@balecok # ");
+
+    register_irq_handler<1>(keyboard_handler);
+
+    return;
+}
+}
+
 std::size_t current_input_length = 0;
 char current_input[50];
-
-char qwerty[128] =
-{
-    0,  27, '1', '2', '3', '4', '5', '6', '7', '8',	
-  '9', '0', '-', '=', '\b',
-  '\t',			
-  'q', 'w', 'e', 'r',	
-  't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',
-    0,			
-  'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';',	
- '\'', '`',   0,		
- '\\', 'z', 'x', 'c', 'v', 'b', 'n',			
-  'm', ',', '.', '/',   0,				
-  '*',
-    0,	
-  ' ',	
-    0,	
-    0,	
-    0,   0,   0,   0,   0,   0,   0,   0,
-    0,	
-    0,	
-    0,	
-    0,	
-    0,	
-    0,	
-  '-',
-    0,	
-    0,
-    0,	
-  '+',
-    0,	
-    0,	
-    0,	
-    0,	
-    0,	
-    0,   0,   0,
-    0,	
-    0,	
-    0,	/*all of other keys are setted as undefined*/
-};
 
 void keyboard_handler(){
     uint8_t key = in_byte(0x60);
@@ -81,7 +56,7 @@ void keyboard_handler(){
         } else if(key == 0x0E){
             // balecok-todo: backspace
         } else {
-           auto qwerty_key = qwerty[key];
+           auto qwerty_key = key_to_ascii(key);
 
            current_input[current_input_length++] = qwerty_key;
            k_print(qwerty_key);
@@ -89,15 +64,6 @@ void keyboard_handler(){
     }
 }
 
-extern "C" {
-void  __attribute__ ((section ("main_section"))) kernel_main(){
-    k_print("root @ balecok $ ");
-
-    register_irq_handler<1>(keyboard_handler);
-
-    return;
-}
-}
 
 long current_line = 0;
 long current_column = 0;
