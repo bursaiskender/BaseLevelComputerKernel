@@ -79,13 +79,6 @@ rm_start: ; Starting process
 
     jmp dword ASM_KERNEL_BASE:0x0
 
-    reset_failed:
-    mov si, reset_failed_msg
-    call print_line_16
-
-    jmp error_end
-
-
 reset_failed:
     mov si, reset_failed_msg
     call print_line_16

@@ -485,6 +485,40 @@ date_command:
     leave
     ret
     
+load_command:
+
+    ret
+
+read_command:
+    mov r12, 0x5000
+    xor r13, r13
+    xor r14, r14
+
+    .restart:
+    movzx r8, word [r12]
+    call print_int_normal
+
+    mov r8, colon
+    mov r9, 1
+    call print_normal
+
+    add r12, 2
+
+    inc r13
+
+    cmp r13, 8
+    jne .restart
+
+    call goto_next_line
+
+    xor r13, r13
+    inc r14
+
+    cmp r14, 16
+    jne .restart
+
+    ret
+    
 help_command:
     push r8
     push r9
@@ -530,7 +564,7 @@ help_command:
     ret
     
 command_table:
-    dq 7
+    dq 9
 
     dq sysinfo_command_str
     dq sysinfo_command
@@ -550,6 +584,12 @@ command_table:
     dq date_command_str
     dq date_command
     
+    dq read_command_str
+    dq read_command
+    
+    dq load_command_str
+    dq load_command 
+    
     dq help_command_str
     dq help_command
     
@@ -559,4 +599,6 @@ devinfo_command_str db 'devinfo', 0
 clear_command_str db 'clear', 0
 date_command_str db 'date', 0
 uptime_command_str db 'uptime', 0
+read_command_str db 'read', 0
+load_command_str db 'load', 0
 help_command_str db 'help', 0
