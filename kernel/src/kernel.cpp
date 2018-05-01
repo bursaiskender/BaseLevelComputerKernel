@@ -1,10 +1,12 @@
-void k_print_line(const char* string);
-void k_print(const char* string);
-
 #include "addresses.hpp"
+#include <cstddef>
 
 typedef unsigned int uint8_t __attribute__((__mode__(__QI__)));
 typedef unsigned int uint16_t __attribute__ ((__mode__ (__HI__)));
+
+void k_print(char key);
+void k_print(const char* string);
+void k_print_line(const char* string);
 
 uint8_t in_byte(uint16_t _port){
     uint8_t rv;
@@ -25,19 +27,76 @@ void register_irq_handler(void (*handler)()){
         );
 }
 
+std::size_t current_input_length = 0;
+char current_input[50];
+
+char qwerty[128] =
+{
+    0,  27, '1', '2', '3', '4', '5', '6', '7', '8',	
+  '9', '0', '-', '=', '\b',
+  '\t',			
+  'q', 'w', 'e', 'r',	
+  't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n',
+    0,			
+  'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';',	
+ '\'', '`',   0,		
+ '\\', 'z', 'x', 'c', 'v', 'b', 'n',			
+  'm', ',', '.', '/',   0,				
+  '*',
+    0,	
+  ' ',	
+    0,	
+    0,	
+    0,   0,   0,   0,   0,   0,   0,   0,
+    0,	
+    0,	
+    0,	
+    0,	
+    0,	
+    0,	
+  '-',
+    0,	
+    0,
+    0,	
+  '+',
+    0,	
+    0,	
+    0,	
+    0,	
+    0,	
+    0,   0,   0,
+    0,	
+    0,	
+    0,	/*all of other keys are setted as undefined*/
+};
+
 void keyboard_handler(){
     uint8_t key = in_byte(0x60);
 
-    k_print("key");
+    if(key & 0x80){
+        // balecok-todo: handle_shift
+    } else {
+        if(key == 0x1C){
+            // balecok-todo: enter
+        } else if(key == 0x0E){
+            // balecok-todo: backspace
+        } else {
+           auto qwerty_key = qwerty[key];
+
+           current_input[current_input_length++] = qwerty_key;
+           k_print(qwerty_key);
+        }
+    }
 }
 
-extern "C"
+extern "C" {
 void  __attribute__ ((section ("main_section"))) kernel_main(){
-    k_print("root@balecok #  ");
+    k_print("root @ balecok $ ");
 
     register_irq_handler<1>(keyboard_handler);
 
     return;
+}
 }
 
 long current_line = 0;
@@ -79,13 +138,19 @@ void k_print_line(const char* string){
     ++current_line;
 }
 
-void k_print(const char* string){
+void k_print(char key){
     uint16_t* vga_buffer = (uint16_t*) 0x0B8000;
 
-    for(int i = 0; string[i] != 0; ++i){
-        vga_buffer[current_line * 80 + current_column] = make_vga_entry(string[i], make_color(WHITE, BLACK));
+    vga_buffer[current_line * 80 + current_column] = make_vga_entry(key, make_color(WHITE, BLACK));
 
-        ++current_column;
+    ++current_column;
+
+    return;
+}
+
+void k_print(const char* string){
+    for(int i = 0; string[i] != 0; ++i){
+        k_print(string[i]);
     }
 
     return;
