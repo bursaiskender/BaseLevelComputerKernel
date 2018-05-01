@@ -1,8 +1,8 @@
 default: start-qemu
 
-bootloader.bin: bootloader/balecokBaseBootloader.asm
-	nasm -w+all -f bin -o bootloader.bin bootloader/balecokBaseBootloader.asm
-
+bootloader.bin: force_look
+	cd bootloader; $(MAKE)
+	
 MICRO_KERNEL_SRC=$(wildcard micro_kernel/*.asm)
 MICRO_KERNEL_UTILS_SRC=$(wildcard micro_kernel/utils/*.asm)
 
@@ -40,7 +40,7 @@ filler.bin: kernel.bin
 	bash prepForLoading.sh
 	
 balecok.iso: bootloader.bin micro_kernel.bin kernel.bin filler.bin
-	cat bootloader.bin > balecok.bin
+	cat bootloader/bootloader.bin > balecok.bin
 	cat micro_kernel.bin >> balecok.bin
 	cat kernel.bin >> balecok.bin
 	dd status=noxfer conv=notrunc if=balecok.bin of=balecok.iso
@@ -62,6 +62,10 @@ devBoot:
 	
 devEnv:
 	geany $(MICRO_KERNEL_SRC) $(MICRO_KERNEL_UTILS_SRC) bootloader/*.asm kernel/src/*.cpp
+
+force_look:
+	true
+	
 clean:
 	rm -rf bootloader.bin
 	rm -rf balecok.bin
