@@ -43,3 +43,5 @@ clean:
 	rm -rf kernel.o
 	rm -rf kernel.bin.o
 	rm -rf kernel.bin
+	rm -rf micro_kernel.g
+	rm -rf micro_kernel.bin
