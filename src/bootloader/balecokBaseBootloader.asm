@@ -57,7 +57,7 @@ rm_start: ; Starting process
     jc reset_failed
     
     ASM_KERNEL_BASE equ 0x100
-    asm_sectors equ 0x20
+    asm_sectors equ 0x21
     bootdev equ 0x0
         
     mov ax, ASM_KERNEL_BASE
@@ -73,23 +73,18 @@ rm_start: ; Starting process
     int 0x13
 
     jc read_failed
-    
-    CPP_KERNEL_BASE equ 0x1000
-    cpp_sectors equ 0x02
 
-    mov ax, CPP_KERNEL_BASE
-    mov es, ax
-    xor bx, bx
-
-    mov ah, 0x2         ; memory reading for sectors
-    mov al, cpp_sectors ; determine the total number of sectors for read
-    xor ch, ch          ; cylinder 0
-    mov cl, 16          ; sector 16
-    mov dh, 1           ; head 1
-    mov dl, bootdev     ; drive
+    cmp al, asm_sectors
     jne read_failed
-    
+
     jmp dword ASM_KERNEL_BASE:0x0
+
+    reset_failed:
+    mov si, reset_failed_msg
+    call print_line_16
+
+    jmp error_end
+
 
 reset_failed:
     mov si, reset_failed_msg
