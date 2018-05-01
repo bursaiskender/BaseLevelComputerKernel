@@ -1,4 +1,4 @@
-bootloader.bin: bootloader.asm
+bootloader.bin: balecokBaseBootloader.asm
 	nasm -w+all -f bin -o bootloader.bin balecokBaseBootloader.asm
 
 devEnv: balecokBaseBootloader.asm intel_16.asm
