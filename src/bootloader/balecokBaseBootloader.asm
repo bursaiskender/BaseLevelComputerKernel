@@ -47,10 +47,7 @@ rm_start: ; Starting process
     call key_wait ; wait any key for starting process
 
     mov si, load_kernel
-        call print_line_16
-        ASM_KERNEL_BASE equ 0x100
-        sectors equ 0x20
-        bootdev equ 0x0
+    call print_line_16
         
     xor ax, ax
     xor ah, ah
@@ -58,13 +55,17 @@ rm_start: ; Starting process
     int 0x13
 
     jc reset_failed
-
+    
+    ASM_KERNEL_BASE equ 0x100
+    asm_sectors equ 0x20
+    bootdev equ 0x0
+        
     mov ax, ASM_KERNEL_BASE
     mov es, ax
     xor bx, bx
 
     mov ah, 0x2         ; memory reading for sectors
-    mov al, sectors     ; determine the total number of sectors for read
+    mov al, asm_sectors ; determine the total number of sectors for read
     xor ch, ch          ; cylinder 0
     mov cl, 2           ; sector 2
     xor dh, dh          ; head 0
@@ -73,7 +74,19 @@ rm_start: ; Starting process
 
     jc read_failed
     
-    cmp al, sectors
+    CPP_KERNEL_BASE equ 0x1000
+    cpp_sectors equ 0x02
+
+    mov ax, CPP_KERNEL_BASE
+    mov es, ax
+    xor bx, bx
+
+    mov ah, 0x2         ; memory reading for sectors
+    mov al, cpp_sectors ; determine the total number of sectors for read
+    xor ch, ch          ; cylinder 0
+    mov cl, 16          ; sector 16
+    mov dh, 1           ; head 1
+    mov dl, bootdev     ; drive
     jne read_failed
     
     jmp dword ASM_KERNEL_BASE:0x0
