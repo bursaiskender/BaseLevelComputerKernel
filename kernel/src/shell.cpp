@@ -42,12 +42,15 @@ char current_input[50];
 
 void exec_command();
 
+#define KEY_ENTER 0x1C
+#define KEY_BACKSPACE 0x0E
+
 void keyboard_handler(){
     uint8_t key = in_byte(0x60);
 
     if(key & 0x80){
     } else {
-        if(key == 0x1C){
+        if(key == KEY_ENTER){
             current_input[current_input_length] = '\0';
 
             k_print_line();
@@ -57,12 +60,14 @@ void keyboard_handler(){
             current_input_length = 0;
 
             k_print("root@balecok # ");
-        } else if(key == 0x0E){
-            set_column(get_column() - 1);
-            k_print(' ');
-            set_column(get_column() - 1);
+        } else if(key == KEY_BACKSPACE){
+            if(current_input_length > 0){
+                set_column(get_column() - 1);
+                k_print(' ');
+                set_column(get_column() - 1);
 
-            --current_input_length;
+                --current_input_length;
+            }
         } else {
            auto qwerty_key = key_to_ascii(key);
 
