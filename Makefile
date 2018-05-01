@@ -8,8 +8,6 @@ bootloader.bin: bootloader/balecokBaseBootloader.asm
 
 micro_kernel.bin: $(MICRO_KERNEL_SRC) $(MICRO_KERNEL_UTILS_SRC)
 	nasm -w+all -f bin -o micro_kernel.bin micro_kernel/micro_kernel.asm
-	nasm -D DEBUG -g -w+all -f elf64 -o micro_kernel.g micro_kernel/micro_kernel.asm
-	bash genaddr.sh
 	
 KERNEL_FLAGS=-masm=intel -Ikernel/include/ -O1 -std=c++11 -Wall -Wextra -fno-exceptions -fno-rtti -ffreestanding
 KERNEL_LINK_FLAGS=-std=c++11 -T linker.ld -ffreestanding -O1 -nostdlib
@@ -68,5 +66,4 @@ clean:
 	rm -rf keyboard.o
 	rm -rf kernel.bin.o
 	rm -rf kernel.bin
-	rm -rf micro_kernel.g
 	rm -rf micro_kernel.bin
