@@ -46,6 +46,34 @@ void secondary_controller_handler(){
     secondary_invoked = true;
 }
 
+static uint8_t wait_for_controller(uint16_t controller, uint8_t mask, uint8_t value, uint16_t timeout){
+    uint8_t status;
+    do {
+        status = in_byte(controller + ATA_STATUS);
+        sleep_ms(1);
+    } while ((status & mask) != value && --timeout);
+
+    return timeout;
+}
+
+bool select_device(drive_descriptor& drive){
+    auto controller = drive.controller;
+
+    if(in_byte(controller + ATA_STATUS) & (ATA_STATUS_BSY | ATA_STATUS_DRQ)){
+        return false;
+    }
+
+    out_byte(controller + ATA_DRV_HEAD, 0xA0 | (drive.slave << 4));
+    sleep_ms(1);
+
+    if(in_byte(controller + ATA_STATUS) & (ATA_STATUS_BSY | ATA_STATUS_DRQ)){
+        return false;
+    }
+
+    return true;
+}
+
+
 void ata_wait_irq_primary(){
     while(!primary_invoked){
         __asm__  __volatile__ ("nop");
@@ -109,33 +137,6 @@ drive_descriptor& drive(uint8_t disk){
     }
 
     return drives[disk];
-}
-
-static uint8_t wait_for_controller(uint16_t controller, uint8_t mask, uint8_t value, uint16_t timeout){
-    uint8_t status;
-    do {
-        status = in_byte(controller + ATA_STATUS);
-        sleep_ms(1);
-    } while ((status & mask) != value && --timeout);
-
-    return timeout;
-}
-
-bool select_device(drive_descriptor& drive){
-    auto controller = drive.controller;
-
-    if(in_byte(controller + ATA_STATUS) & (ATA_STATUS_BSY | ATA_STATUS_DRQ)){
-        return false;
-    }
-
-    out_byte(controller + ATA_DRV_HEAD, 0xA0 | (drive.slave << 4));
-    sleep_ms(1);
-
-    if(in_byte(controller + ATA_STATUS) & (ATA_STATUS_BSY | ATA_STATUS_DRQ)){
-        return false;
-    }
-
-    return true;
 }
 
 bool ata_read_sectors(drive_descriptor& drive, std::size_t start, uint8_t count, void* destination){
