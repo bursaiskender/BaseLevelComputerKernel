@@ -21,8 +21,8 @@ balecok.iso: bootloader.bin micro_kernel.bin kernel.bin filler.bin
 	cat kernel/kernel.bin >> balecok.bin
 	dd status=noxfer conv=notrunc if=balecok.bin of=balecok.iso
 
-start-qemu: balecok.iso
-	qemu-system-x86_64 -fda balecok.iso
+start-qemu: balecok.iso 
+	qemu-system-x86_64 -fda balecok.iso -hda hdd.img
 
 bochs: balecok.iso
 	echo balecok.iso
@@ -48,6 +48,9 @@ devEnv:
 
 force_look:
 	true
+	
+create_hdd:
+	dd if=/dev/zero of=hdd.img bs=512 count=20160
 	
 clean:
 	cd bootloader; $(MAKE) clean
