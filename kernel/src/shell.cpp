@@ -208,7 +208,7 @@ void date_command(const char*){
         year += 100;
     }
 
-    k_printf("%d.%d.%d %d:%d:%d\n", day, month, year, hour, minute, second);
+    k_printf("%d.%d.%d %d:%.2d:%.2d\n", day, month, year, hour, minute, second);
 }
 
 
