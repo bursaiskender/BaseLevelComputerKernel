@@ -15,7 +15,7 @@ kernel.bin: force_look
 filler.bin: kernel.bin
 	bash prepForLoading.sh
 	
-balecok.iso: bootloader.bin micro_kernel.bin kernel.bin filler.bin
+balecok.iso: bootloader.bin micro_kernel.bin kernel.bin
 	cat bootloader/bootloader.bin > balecok.bin
 	cat micro_kernel/micro_kernel.bin >> balecok.bin
 	cat kernel/kernel.bin >> balecok.bin
