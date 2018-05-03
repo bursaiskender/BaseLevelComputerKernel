@@ -1,6 +1,3 @@
-#include <cstddef>
-#include <array>
-
 #include "types.hpp"
 #include "keyboard.hpp"
 #include "kernel_utils.hpp"
@@ -29,7 +26,7 @@ struct command_definition {
     void (*function)(const char*);
 };
 
-std::array<command_definition, 10> commands = {{
+command_definition commands[10] = {
     {"reboot", reboot_command},
     {"help", help_command},
     {"uptime", uptime_command},
@@ -40,9 +37,10 @@ std::array<command_definition, 10> commands = {{
     {"mmap", mmap_command},
     {"memory", memory_command},
     {"disks", disks_command},
-}};
+};
 
-std::size_t current_input_length = 0;
+
+uint64_t current_input_length = 0;
 char current_input[50];
 
 void exec_command();
@@ -144,20 +142,20 @@ uint8_t get_RTC_register(int reg) {
 }
 
 void date_command(const char*){
-    std::size_t second;
-    std::size_t minute;
-    std::size_t hour;
-    std::size_t day;
-    std::size_t month;
-    std::size_t year;
+    uint64_t second;
+    uint64_t minute;
+    uint64_t hour;
+    uint64_t day;
+    uint64_t month;
+    uint64_t year;
 
-    std::size_t last_second;
-    std::size_t last_minute;
-    std::size_t last_hour;
-    std::size_t last_day;
-    std::size_t last_month;
-    std::size_t last_year;
-    std::size_t registerB;
+    uint64_t last_second;
+    uint64_t last_minute;
+    uint64_t last_hour;
+    uint64_t last_day;
+    uint64_t last_month;
+    uint64_t last_year;
+    uint64_t registerB;
 
     while (get_update_in_progress_flag()){};                
 
@@ -227,7 +225,7 @@ void mmap_command(const char*){
     } else {
         k_printf("There are %d mmap entry\n", mmap_entry_count());
         k_print_line("Base         End          Size                  Type");
-        for(std::size_t i = 0; i < mmap_entry_count(); ++i){
+        for(uint64_t i = 0; i < mmap_entry_count(); ++i){
             auto& entry = mmap_entry(i);
 
             k_printf("%.10h %.10h %.10h %8m %s\n",
@@ -256,14 +254,14 @@ void memory_command(const char*){
                 buffer[i+4], buffer[i+5], buffer[i+6], buffer[i+7]);
         }
 
-        k_free(reinterpret_cast<std::size_t*>(buffer));
+        k_free(reinterpret_cast<uint64_t*>(buffer));
     }
 }
 
 void disks_command(const char*){
     k_print_line("Controller   Drive    Present");
 
-    for(std::size_t i = 0; i < number_of_disks(); ++i){
+    for(uint64_t i = 0; i < number_of_disks(); ++i){
         auto& descriptor = drive(i);
 
         k_printf("%12h %8h %s\n", descriptor.controller, descriptor.drive, descriptor.present ? "Yes" : "No");
