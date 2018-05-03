@@ -22,7 +22,7 @@ balecok.iso: bootloader.bin micro_kernel.bin kernel.bin filler.bin
 	dd status=noxfer conv=notrunc if=balecok.bin of=balecok.iso
 
 start-qemu: balecok.iso 
-	qemu-system-x86_64 -fda balecok.iso -hda hdd.img
+	qemu-system-x86_64 -fda balecok.iso -hda hdd.img -boot order=a
 
 bochs: balecok.iso
 	echo balecok.iso

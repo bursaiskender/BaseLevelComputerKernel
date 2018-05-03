@@ -9,7 +9,8 @@
 #include "timer.hpp"
 #include "utils.hpp"
 #include "memory.hpp"
-
+#include "ata.hpp"
+ 
 namespace {
 
 void reboot_command(const char* params);
@@ -258,58 +259,12 @@ void memory_command(const char*){
 }
 
 void disks_command(const char*){
-    k_print_line("Controllers");
+    k_print_line("Controller   Drive    Present");
 
-    out_byte(0x1F3, 0x88);
-    bool maindisk = in_byte(0x1F3) == 0x88;
+    for(std::size_t i = 0; i < number_of_disks(); ++i){
+        auto& descriptor = drive(i);
 
-    out_byte(0x173, 0x88);
-    bool subdisk = in_byte(0x173) == 0x88;
-
-    if(maindisk){
-        k_print_line("\t\tMain: Attached");
-    } else {
-        k_print_line("\t\tMain: Not Attached");
-    }
-
-    if(subdisk){
-        k_print_line("\t\tSub-disk: Attached");
-    } else {
-        k_print_line("\t\tSub-disk: Not Attached");
-    }
-
-    k_print_line("Disks");
-
-    out_byte(0x1F6, 0xA0);
-    sleep_ms(5);
-    if(in_byte(0x1F7) & 0x40){
-        k_print_line("\t\tMain .m: Attached");
-    } else {
-        k_print_line("\t\tMain .m: Not Attached");
-    }
-
-    out_byte(0x1F6, 0xB0);
-    sleep_ms(5);
-    if(in_byte(0x1F7) & 0x40){
-        k_print_line("\t\tMain .s: Attached");
-    } else {
-        k_print_line("\t\tMain .s: Not Attached");
-    }
-
-    out_byte(0x176, 0xA0);
-    sleep_ms(5);
-    if(in_byte(0x177) & 0x40){
-        k_print_line("\t\tSub-disk .m: Attached");
-    } else {
-        k_print_line("\t\tSub-disk .m: Not Attached");
-    }
-
-    out_byte(0x176, 0xB0);
-    sleep_ms(5);
-    if(in_byte(0x177) & 0x40){
-        k_print_line("\t\tSub-disk .s: Attached");
-    } else {
-        k_print_line("\t\tSub-disk .s: Not Attached");
+        k_printf("%h\t\t%h\t\t%s\n", descriptor.controller, descriptor.drive, descriptor.present ? "Yes" : "No");
     }
 }
 
