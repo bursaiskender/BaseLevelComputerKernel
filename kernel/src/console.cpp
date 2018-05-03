@@ -236,7 +236,25 @@ void k_printf(const char* fmt, ...){
 
                     --i;
                 }
-            } else if(ch == 's'){
+            } 
+            else if(ch == 'm'){
+                auto memory= va_arg(va, std::size_t);
+
+                if(memory > 1024 * 1024 * 1024){
+                    k_print(memory / (1024 * 1024 * 1024));
+                    k_print("GiB");
+                } else if(memory > 1024 * 1024){
+                    k_print(memory / (1024 * 1024));
+                    k_print("MiB");
+                } else if(memory > 1024){
+                    k_print(memory / 1024);
+                    k_print("KiB");
+                } else {
+                    k_print(memory);
+                    k_print("B");
+                }
+            }
+            else if(ch == 's'){
                 auto arg = va_arg(va, const char*);
                 k_print(arg);
             }
