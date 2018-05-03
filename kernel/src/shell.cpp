@@ -269,10 +269,11 @@ void partitions_command(const char* params){
     if(disks::disk_exists(uuid)){
         auto partitions = disks::partitions(disks::disk_by_uuid(uuid));
 
-        k_print_line("UUID       Type         Start      Sectors");
-
-        k_printf("%10d %12s %10d %d\n", partitions[0].uuid, disks::partition_type_to_string(partitions[0].type),
-            partitions[0].start, partitions[0].sectors);
+        if(partitions.get()){
+            k_print_line("UUID       Type         Start      Sectors");
+            k_printf("%10d %12s %10d %d\n", partitions.get()[0].uuid, disks::partition_type_to_string(partitions.get()[0].type),
+                partitions.get()[0].start, partitions.get()[0].sectors);
+        }
     } else {
         k_printf("Disks %d does not exist\n", uuid);
     }

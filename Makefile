@@ -15,13 +15,14 @@ kernel.bin: force_look
 filler.bin: kernel.bin
 	bash prepForLoading.sh
 	
-balecok.iso: bootloader.bin micro_kernel.bin kernel.bin
+balecok.iso: bootloader.bin micro_kernel.bin kernel.bin filler.bin
 	cat bootloader/bootloader.bin > balecok.bin
 	cat micro_kernel/micro_kernel.bin >> balecok.bin
 	cat kernel/kernel.bin >> balecok.bin
+	cat filler.bin >> balecok.bin
 	dd status=noxfer conv=notrunc if=balecok.bin of=balecok.iso
 
-start-qemu: balecok.iso 
+start-qemu: balecok.iso create_hdd
 	qemu-system-x86_64 -fda balecok.iso -hda hdd.img -boot order=a
 
 bochs: balecok.iso
@@ -31,7 +32,7 @@ bochs: balecok.iso
 
 debug: balecok.iso
 	echo "c" > commands
-	bochs -qf .bochsConfig -rc commands
+	bochs -qf .bochsConfigDebug -rc commands
 	rm commands
 	
 devMicro: 
@@ -50,7 +51,8 @@ force_look:
 	true
 	
 create_hdd:
-	dd if=/dev/zero of=hdd.img bs=512 count=20160
+	qemu-img create hdd.img 256M
+	
 	
 clean:
 	cd bootloader; $(MAKE) clean

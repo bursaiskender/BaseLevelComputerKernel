@@ -103,24 +103,25 @@ bool disks::read_sectors(const disk_descriptor& disk, uint64_t start, uint8_t co
             return ata::read_sectors(*static_cast<ata::drive_descriptor*>(disk.descriptor), start, count, destination);
 
         default:
+            k_print_line("BOOH");
             return false;
     }
 }
 
-disks::partition_descriptor* disks::partitions(const disk_descriptor& disk){
-    uint16_t* buffer = reinterpret_cast<uint16_t*>(k_malloc(512));
+unique_ptr<disks::partition_descriptor> disks::partitions(const disk_descriptor& disk){
+    unique_ptr<uint64_t> buffer(k_malloc(512));
 
-    if(!read_sectors(disk, 0, 1, buffer)){
+    if(!read_sectors(disk, 0, 1, buffer.get())){
         k_print_line("Read Boot Record failed");
 
-        return nullptr;
+        return {};
     } else {
-        auto* boot_record = reinterpret_cast<boot_record_t*>(buffer);
+        auto* boot_record = reinterpret_cast<boot_record_t*>(buffer.get());
 
         if(boot_record->signature != 0xAA55){
             k_print_line("Invalid boot record signature");
 
-            return nullptr;
+            return {};
         }
 
         uint64_t n = 0;
@@ -148,8 +149,6 @@ disks::partition_descriptor* disks::partitions(const disk_descriptor& disk){
             }
         }
 
-        k_free(reinterpret_cast<uint64_t*>(buffer));
-
-        return partitions;
+        return unique_ptr<disks::partition_descriptor>(partitions);
     }
 }
