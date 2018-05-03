@@ -5,50 +5,8 @@
 
 namespace {
 
-bool detected = false;
-drive_descriptor* drives;
-
-}
-
-#define MASTER_BIT 0
-#define SLAVE_BIT 1
-
-void detect_disks(){
-    if(!detected){
-        drives = reinterpret_cast<drive_descriptor*>(k_malloc(4 * sizeof(drive_descriptor)));
-
-        drives[0] = {0x1F0, 0xE0, false, MASTER_BIT};
-        drives[1] = {0x1F0, 0xF0, false, SLAVE_BIT};
-        drives[2] = {0x170, 0xE0, false, MASTER_BIT};
-        drives[3] = {0x170, 0xF0, false, SLAVE_BIT};
-
-        for(uint8_t i = 0; i < 4; ++i){
-            auto& drive = drives[i];
-
-            out_byte(drive.controller + 0x6, drive.drive);
-            sleep_ms(4);
-            drive.present = in_byte(drive.controller + 0x7) & 0x40;
-        }
-
-        detected = true;
-    }
-}
-
-uint8_t number_of_disks(){
-    if(!detected){
-        detect_disks();
-    }
-
-    return 4;
-}
-
-drive_descriptor& drive(uint8_t disk){
-    if(!detected){
-        detect_disks();
-    }
-
-    return drives[disk];
-}
+#define ATA_PRIMARY 0x1F0
+#define ATA_SECONDARY 0x170
 
 #define ATA_DATA        0
 #define ATA_ERROR       1
@@ -70,6 +28,88 @@ drive_descriptor& drive(uint8_t disk){
 #define ATAPI_IDENTIFY  0xA1
 #define ATA_READ_BLOCK  0x20
 #define ATA_WRITE_BLOCK 0x30
+
+#define MASTER_BIT 0
+#define SLAVE_BIT 1
+
+bool detected = false;
+drive_descriptor* drives;
+
+volatile bool primary_invoked = false;
+volatile bool secondary_invoked = false;
+
+void primary_controller_handler(){
+    primary_invoked = true;
+}
+
+void secondary_controller_handler(){
+    secondary_invoked = true;
+}
+
+void ata_wait_irq_primary(){
+    while(!primary_invoked){
+        __asm__  __volatile__ ("nop");
+        __asm__  __volatile__ ("nop");
+        __asm__  __volatile__ ("nop");
+        __asm__  __volatile__ ("nop");
+        __asm__  __volatile__ ("nop");
+    }
+
+    primary_invoked = false;
+}
+
+void ata_wait_irq_secondary(){
+    while(!secondary_invoked){
+        __asm__  __volatile__ ("nop");
+        __asm__  __volatile__ ("nop");
+        __asm__  __volatile__ ("nop");
+        __asm__  __volatile__ ("nop");
+        __asm__  __volatile__ ("nop");
+    }
+
+    secondary_invoked = false;
+}
+
+} 
+void detect_disks(){
+    if(!detected){
+        drives = reinterpret_cast<drive_descriptor*>(k_malloc(4 * sizeof(drive_descriptor)));
+
+        drives[0] = {ATA_PRIMARY, 0xE0, false, MASTER_BIT};
+        drives[1] = {ATA_PRIMARY, 0xF0, false, SLAVE_BIT};
+        drives[2] = {ATA_SECONDARY, 0xE0, false, MASTER_BIT};
+        drives[3] = {ATA_SECONDARY, 0xF0, false, SLAVE_BIT};
+
+        for(uint8_t i = 0; i < 4; ++i){
+            auto& drive = drives[i];
+
+            out_byte(drive.controller + 0x6, drive.drive);
+            sleep_ms(4);
+            drive.present = in_byte(drive.controller + 0x7) & 0x40;
+        }
+
+        register_irq_handler<14>(primary_controller_handler);
+        register_irq_handler<15>(secondary_controller_handler);
+
+        detected = true;
+    }
+}
+
+uint8_t number_of_disks(){
+    if(!detected){
+        detect_disks();
+    }
+
+    return 4;
+}
+
+drive_descriptor& drive(uint8_t disk){
+    if(!detected){
+        detect_disks();
+    }
+
+    return drives[disk];
+}
 
 static uint8_t wait_for_controller(uint16_t controller, uint8_t mask, uint8_t value, uint16_t timeout){
     uint8_t status;
@@ -127,15 +167,19 @@ bool ata_read_sectors(drive_descriptor& drive, std::size_t start, uint8_t count,
         return false;
     }
 
+    if(controller == ATA_PRIMARY){
+        ata_wait_irq_primary();
+    } else {
+        ata_wait_irq_secondary();
+    }
+
+    if(in_byte(controller + ATA_STATUS) & ATA_STATUS_ERR){
+        return false;
+    }
+
     uint16_t* buffer = reinterpret_cast<uint16_t*>(destination);
 
     for(uint8_t sector = 0; sector < count; ++sector){
-        sleep_ms(1);
-
-        while (!(in_byte(controller + ATA_STATUS) & ATA_STATUS_DRQ)) {
-            __asm__ __volatile__ ("nop; nop;");
-        }
-
         for(int i = 0; i < 256; ++i){
             *buffer++ = in_word(controller + ATA_DATA);
         }
