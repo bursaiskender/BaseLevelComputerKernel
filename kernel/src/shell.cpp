@@ -264,7 +264,7 @@ void disks_command(const char*){
     for(std::size_t i = 0; i < number_of_disks(); ++i){
         auto& descriptor = drive(i);
 
-        k_printf("%h\t\t%h\t\t%s\n", descriptor.controller, descriptor.drive, descriptor.present ? "Yes" : "No");
+        k_printf("%12h %8h %s\n", descriptor.controller, descriptor.drive, descriptor.present ? "Yes" : "No");
     }
 }
 
