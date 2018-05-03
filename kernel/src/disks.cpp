@@ -3,12 +3,13 @@
 #include "balecok.hpp"
 #include "console.hpp"
 #include "unique_ptr.hpp"
+#include "array.hpp"
 
 namespace {
 
 bool detected = false;
 
-disks::disk_descriptor _disks[4];
+array<disks::disk_descriptor, 4> _disks;
 uint64_t number_of_disks = 0;
 
 void detect_disks(){
