@@ -56,7 +56,10 @@ void keyboard_handler(){
             k_print_line();
 
             exec_command();
-
+            if(get_column() != 0){
+                set_column(0);
+                set_line(get_line() + 1);
+                } 
             current_input_length = 0;
 
             k_print("root@balecok # ");
@@ -243,7 +246,6 @@ void memory_command(const char*){
         }
     }
 }
-
 }
 void init_shell(){
     current_input_length = 0;

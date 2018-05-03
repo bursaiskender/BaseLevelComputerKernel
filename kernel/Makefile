@@ -4,7 +4,8 @@ KERNEL_LINK_FLAGS=-std=c++11 -T linker.ld -ffreestanding -O1 -nostdlib -fno-stac
 KERNEL_O_FILES=kernel.o keyboard.o console.o kernel_utils.o timer.o shell.o utils.o memory.o
 CRTBEGIN_OBJ:=$(shell $(CC) $(CFLAGS) -print-file-name=crtbegin.o)
 CRTEND_OBJ:=$(shell $(CC) $(CFLAGS) -print-file-name=crtend.o)
-LINK_O_FILES=$(CRTBEGIN_OBJ) $(KERNEL_O_FILES) $(CRTEND_OBJ)
+
+LINK_O_FILES=$(KERNEL_O_FILES)
 
 kernel.bin: $(KERNEL_O_FILES)
 	g++ $(KERNEL_LINK_FLAGS) -o kernel.bin.o $(LINK_O_FILES)
