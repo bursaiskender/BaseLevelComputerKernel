@@ -215,7 +215,9 @@ void load_memory_map(){
 }
 
 void k_free(std::size_t* block){
-    auto free_header = reinterpret_cast<malloc_header_chunk*>(block);
+    auto free_header = reinterpret_cast<malloc_header_chunk*>(
+        reinterpret_cast<uintptr_t>(block) - sizeof(malloc_header_chunk));
+    _used_memory -= free_header->size + META_SIZE;
 
     auto header = malloc_head;
 
