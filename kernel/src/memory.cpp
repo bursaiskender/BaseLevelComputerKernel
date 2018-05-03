@@ -24,6 +24,9 @@ void mmap_query(std::size_t cmd, std::size_t* result){
     *result = tmp;
 }
 
+std::size_t _available_memory;
+std::size_t _used_memory;
+
 struct malloc_header_chunk {
     std::size_t size;
     malloc_header_chunk* next;
@@ -167,26 +170,21 @@ std::size_t* k_malloc(std::size_t bytes){
                 auto new_footer = reinterpret_cast<malloc_footer_chunk*>(
                     reinterpret_cast<uintptr_t>(new_block) + new_block_size + sizeof(malloc_header_chunk));
                 new_footer->size = new_block_size;
-
-                current->prev = nullptr;
-                current->next = nullptr;
-
-                return reinterpret_cast<std::size_t*>(
-                    reinterpret_cast<uintptr_t>(current) + sizeof(malloc_header_chunk));
+                break;
             } else {
                 current->prev->next = current->next;
                 current->next->prev = current->prev;
-
-                current->prev = nullptr;
-                current->next = nullptr;
-
-                return reinterpret_cast<std::size_t*>(
-                    reinterpret_cast<uintptr_t>(current) + sizeof(malloc_header_chunk));
+                break;
             }
         }
 
         current = current->next;
     }
+    _used_memory += bytes + META_SIZE;
+    current->prev = nullptr;
+    current->next = nullptr;
+    return reinterpret_cast<std::size_t*>(
+        reinterpret_cast<uintptr_t>(current) + sizeof(malloc_header_chunk));
 }
 
 void load_memory_map(){
@@ -205,9 +203,12 @@ void load_memory_map(){
             os_entry.base = base;
             os_entry.size = length;
             os_entry.type = bios_entry.type;
-
+            
             if(os_entry.base == 0 && os_entry.type == 1){
                 os_entry.type = 7;
+            }
+            if(os_entry.type == 1){
+                _available_memory += os_entry.size;
             }
         }
     }
@@ -255,4 +256,13 @@ const char* str_e820_type(std::size_t type){
         default:
             return "Unknown";
     }
+}
+std::size_t available_memory(){
+    return _available_memory;
+}
+std::size_t used_memory(){
+    return _used_memory;
+}
+std::size_t free_memory(){
+    return _available_memory - _used_memory;
 }
