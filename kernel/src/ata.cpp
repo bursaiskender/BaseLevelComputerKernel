@@ -11,5 +11,16 @@ void ata_read_sectors(uint8_t controller, bool slave, std::size_t start, uint8_t
     out_byte(controller + 0x4, static_cast<uint8_t>(start >> 8));
     out_byte(controller + 0x5, static_cast<uint8_t>(start >> 16));
     out_byte(controller + 0x7, 0x20);
-    uint16_t* buffer = reinterpret_cast<uint16_t*>(destination); 
+    uint16_t* buffer = reinterpret_cast<uint16_t*>(destination);
+    for(uint8_t sector = 0; sector < count; ++sector){
+        sleep_ms(1);
+
+        while (!(in_byte(0x1F7) & 0x08)) {
+            __asm__ __volatile__ ("nop; nop;");
+        }
+
+        for(int i = 0; i < 256; ++i){
+            (*buffer++) = in_word(controller + 0x0);
+        }
+} 
 }
