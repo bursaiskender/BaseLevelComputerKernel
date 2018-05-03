@@ -45,3 +45,52 @@ print_string:
     pop rax
 
     ret
+
+print_int:
+    push rax
+    push rbx
+    push rdx
+    push r10
+    push rsi
+
+    mov rax, r8
+    mov r10, rdx
+
+    xor rsi, rsi
+
+    .loop:
+        xor rdx, rdx
+        mov rbx, 10
+        div rbx
+        add rdx, 48
+
+        push rdx
+        inc rsi
+
+        test rax, rax
+        jne .loop
+
+    .next:
+        test rsi, rsi
+        je .exit
+        dec rsi
+
+        ; write the char
+        pop rax
+        stosb
+
+        ; Write style code
+        mov rdx, r10
+        mov al, dl
+        stosb
+
+        jmp .next
+
+    .exit:
+        pop rsi
+        pop r10
+        pop rdx
+        pop rbx
+        pop rax
+
+        ret
