@@ -6,7 +6,7 @@
 #include "timer.hpp"
 #include "utils.hpp"
 #include "memory.hpp"
-#include "ata.hpp"
+#include "disks.hpp"
  
 namespace {
 
@@ -20,6 +20,7 @@ void echo_command(const char* params);
 void mmap_command(const char* params);
 void memory_command(const char* params);
 void disks_command(const char* params);
+void partitions_command(const char* params);
 void ls_command(const char* params);
 
 struct command_definition {
@@ -27,7 +28,7 @@ struct command_definition {
     void (*function)(const char*);
 };
 
-command_definition commands[11] = {
+command_definition commands[12] = {
     {"reboot", reboot_command},
     {"help", help_command},
     {"uptime", uptime_command},
@@ -38,6 +39,7 @@ command_definition commands[11] = {
     {"mmap", mmap_command},
     {"memory", memory_command},
     {"disks", disks_command},
+    {"partitions", partitions_command},
     {"ls", ls_command},
 };
 
@@ -130,7 +132,7 @@ void uptime_command(const char*){
     k_printf("Uptime: %ds\n", timer_seconds());
 }
 
-#define CURRENT_YEAR        2013
+#define CURRENT_YEAR        2018
 #define century_register    0x00
 #define cmos_address        0x70
 #define cmos_data           0x71
@@ -250,30 +252,33 @@ void memory_command(const char*){
 }
 
 void disks_command(const char*){
-    k_print_line("Controller   Drive    Present");
+    k_print_line("UUID       Type");
 
-    for(uint64_t i = 0; i < number_of_disks(); ++i){
-        auto& descriptor = drive(i);
+    for(uint64_t i = 0; i < disks::detected_disks(); ++i){
+        auto& descriptor = disks::disk_by_index(i);
 
-        k_printf("%12h %8h %s\n", descriptor.controller, descriptor.drive, descriptor.present ? "Yes" : "No");
+        k_printf("%10d %s\n", descriptor.uuid, disks::disk_type_to_string(descriptor.type));
     }
 }
 
-void ls_command(const char*){
-    uint16_t* buffer = reinterpret_cast<uint16_t*>(k_malloc(512));
+void partitions_command(const char* params){
+    const char* delay_str = params + 11;
 
-    if(!ata_read_sectors(drive(0), 1, 1, buffer)){
-        k_print_line("Read failed");
+    auto uuid = parse(delay_str);
+
+    if(disks::disk_exists(uuid)){
+        auto partitions = disks::partitions(disks::disk_by_uuid(uuid));
+
+        k_print_line("UUID       Type         Start      Sectors");
+
+        k_printf("%10d %12s %10d %d\n", partitions[0].uuid, disks::partition_type_to_string(partitions[0].type),
+            partitions[0].start, partitions[0].sectors);
     } else {
-        for(int i = 0; i < 128; i += 8){
-            k_printf("%.4h %.4h %.4h %.4h %.4h %.4h %.4h %.4h\n",
-                (uint64_t) buffer[i+0], (uint64_t) buffer[i+1], (uint64_t) buffer[i+2], (uint64_t) buffer[i+3],
-                (uint64_t) buffer[i+4], (uint64_t) buffer[i+5], (uint64_t) buffer[i+6], (uint64_t) buffer[i+7]);
-        }
-
-        k_free(reinterpret_cast<uint64_t*>(buffer));
+        k_printf("Disks %d does not exist\n", uuid);
     }
 }
+
+void ls_command(const char*){}
 }
 void init_shell(){
     current_input_length = 0;

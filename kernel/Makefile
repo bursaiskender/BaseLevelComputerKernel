@@ -4,7 +4,7 @@ CPP_FLAGS=-masm=intel -Iinclude/ -nostdlib -O1 -std=c++11 -fno-exceptions -fno-r
 KERNEL_FLAGS=$(CPP_FLAGS)
 KERNEL_LINK_FLAGS=-lgcc -T linker.ld $(CPP_FLAGS)
 
-KERNEL_O_FILES=kernel.o keyboard.o console.o kernel_utils.o timer.o shell.o utils.o memory.o ata.o balecok.o
+KERNEL_O_FILES=kernel.o keyboard.o console.o kernel_utils.o timer.o shell.o utils.o memory.o ata.o disks.o balecok.o
 CRTBEGIN_OBJ:=$(shell $(CC) $(CFLAGS) -print-file-name=crtbegin.o)
 CRTEND_OBJ:=$(shell $(CC) $(CFLAGS) -print-file-name=crtend.o)
 
@@ -43,6 +43,9 @@ ata.o: src/ata.cpp
 	
 balecok.o: src/balecok.cpp
 	$(CC) $(KERNEL_FLAGS) -c src/balecok.cpp -o balecok.o
+
+disks.o: src/disks.cpp
+	$(CC) $(KERNEL_FLAGS) -c src/disks.cpp -o disks.o
 	
 clean:
 	rm -f *.o

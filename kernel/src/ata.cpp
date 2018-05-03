@@ -32,8 +32,7 @@ namespace {
 #define MASTER_BIT 0
 #define SLAVE_BIT 1
 
-bool detected = false;
-drive_descriptor* drives;
+ata::drive_descriptor* drives;
 
 volatile bool primary_invoked = false;
 volatile bool secondary_invoked = false;
@@ -45,34 +44,6 @@ void primary_controller_handler(){
 void secondary_controller_handler(){
     secondary_invoked = true;
 }
-
-static uint8_t wait_for_controller(uint16_t controller, uint8_t mask, uint8_t value, uint16_t timeout){
-    uint8_t status;
-    do {
-        status = in_byte(controller + ATA_STATUS);
-        sleep_ms(1);
-    } while ((status & mask) != value && --timeout);
-
-    return timeout;
-}
-
-bool select_device(drive_descriptor& drive){
-    auto controller = drive.controller;
-
-    if(in_byte(controller + ATA_STATUS) & (ATA_STATUS_BSY | ATA_STATUS_DRQ)){
-        return false;
-    }
-
-    out_byte(controller + ATA_DRV_HEAD, 0xA0 | (drive.slave << 4));
-    sleep_ms(1);
-
-    if(in_byte(controller + ATA_STATUS) & (ATA_STATUS_BSY | ATA_STATUS_DRQ)){
-        return false;
-    }
-
-    return true;
-}
-
 
 void ata_wait_irq_primary(){
     while(!primary_invoked){
@@ -98,48 +69,64 @@ void ata_wait_irq_secondary(){
     secondary_invoked = false;
 }
 
-} 
-void detect_disks(){
-    if(!detected){
-        drives = reinterpret_cast<drive_descriptor*>(k_malloc(4 * sizeof(drive_descriptor)));
+static uint8_t wait_for_controller(uint16_t controller, uint8_t mask, uint8_t value, uint16_t timeout){
+    uint8_t status;
+    do {
+        status = in_byte(controller + ATA_STATUS);
+        sleep_ms(1);
+    } while ((status & mask) != value && --timeout);
 
-        drives[0] = {ATA_PRIMARY, 0xE0, false, MASTER_BIT};
-        drives[1] = {ATA_PRIMARY, 0xF0, false, SLAVE_BIT};
-        drives[2] = {ATA_SECONDARY, 0xE0, false, MASTER_BIT};
-        drives[3] = {ATA_SECONDARY, 0xF0, false, SLAVE_BIT};
-
-        for(uint8_t i = 0; i < 4; ++i){
-            auto& drive = drives[i];
-
-            out_byte(drive.controller + 0x6, drive.drive);
-            sleep_ms(4);
-            drive.present = in_byte(drive.controller + 0x7) & 0x40;
-        }
-
-        register_irq_handler<14>(primary_controller_handler);
-        register_irq_handler<15>(secondary_controller_handler);
-
-        detected = true;
-    }
+    return timeout;
 }
 
-uint8_t number_of_disks(){
-    if(!detected){
-        detect_disks();
+bool select_device(ata::drive_descriptor& drive){
+    auto controller = drive.controller;
+
+    if(in_byte(controller + ATA_STATUS) & (ATA_STATUS_BSY | ATA_STATUS_DRQ)){
+        return false;
     }
 
+    out_byte(controller + ATA_DRV_HEAD, 0xA0 | (drive.slave << 4));
+    sleep_ms(1);
+
+    if(in_byte(controller + ATA_STATUS) & (ATA_STATUS_BSY | ATA_STATUS_DRQ)){
+        return false;
+    }
+
+    return true;
+}
+
+} 
+
+void ata::detect_disks(){
+    drives = reinterpret_cast<drive_descriptor*>(k_malloc(4 * sizeof(drive_descriptor)));
+
+    drives[0] = {ATA_PRIMARY, 0xE0, false, MASTER_BIT};
+    drives[1] = {ATA_PRIMARY, 0xF0, false, SLAVE_BIT};
+    drives[2] = {ATA_SECONDARY, 0xE0, false, MASTER_BIT};
+    drives[3] = {ATA_SECONDARY, 0xF0, false, SLAVE_BIT};
+
+    for(uint8_t i = 0; i < 4; ++i){
+        auto& drive = drives[i];
+
+        out_byte(drive.controller + 0x6, drive.drive);
+        sleep_ms(4);
+        drive.present = in_byte(drive.controller + 0x7) & 0x40;
+    }
+
+    register_irq_handler<14>(primary_controller_handler);
+    register_irq_handler<15>(secondary_controller_handler);
+}
+
+uint8_t ata::number_of_disks(){
     return 4;
 }
 
-drive_descriptor& drive(uint8_t disk){
-    if(!detected){
-        detect_disks();
-    }
-
+ata::drive_descriptor& ata::drive(uint8_t disk){
     return drives[disk];
 }
 
-bool ata_read_sectors(drive_descriptor& drive, uint64_t start, uint8_t count, void* destination){
+bool ata::read_sectors(drive_descriptor& drive, uint64_t start, uint8_t count, void* destination){
     if(!select_device(drive)){
         return false;
     }
@@ -180,6 +167,7 @@ bool ata_read_sectors(drive_descriptor& drive, uint64_t start, uint8_t count, vo
 
     uint16_t* buffer = reinterpret_cast<uint16_t*>(destination);
 
+    //Read the disk sectors
     for(uint8_t sector = 0; sector < count; ++sector){
         for(int i = 0; i < 256; ++i){
             *buffer++ = in_word(controller + ATA_DATA);
