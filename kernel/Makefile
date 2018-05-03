@@ -1,8 +1,8 @@
 CC=x86_64-elf-g++
 WARNING_FLAGS=-Wall -Wextra -pedantic -Wold-style-cast -Wshadow
-CPP_FLAGS=-masm=intel -Iinclude/ -nostdlib -O1 -std=c++11 -fno-exceptions -fno-rtti -ffreestanding -lgcc -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow -fno-stack-protector  $(WARNING_FLAGS)
+CPP_FLAGS=-masm=intel -Iinclude/ -nostdlib -O1 -std=c++11 -fno-exceptions -fno-rtti -ffreestanding -mno-red-zone -mno-mmx -mno-sse -mno-sse2 -mno-sse3 -mno-3dnow -fno-stack-protector  $(WARNING_FLAGS)
 KERNEL_FLAGS=$(CPP_FLAGS)
-KERNEL_LINK_FLAGS=-T linker.ld $(CPP_FLAGS)
+KERNEL_LINK_FLAGS=-lgcc -T linker.ld $(CPP_FLAGS)
 
 KERNEL_O_FILES=kernel.o keyboard.o console.o kernel_utils.o timer.o shell.o utils.o memory.o ata.o balecok.o
 CRTBEGIN_OBJ:=$(shell $(CC) $(CFLAGS) -print-file-name=crtbegin.o)
