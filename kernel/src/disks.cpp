@@ -150,6 +150,18 @@ unique_heap_array<disks::partition_descriptor> disks::partitions(const disk_desc
     }
 }
 
+
+bool disks::partition_exists(const disk_descriptor& disk, uint64_t uuid){
+    for(auto& partition : partitions(disk)){
+        if(partition.uuid == uuid){
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
 void disks::mount(const disk_descriptor& disk, uint64_t uuid){
     _mounted_disk = &disk;
 
