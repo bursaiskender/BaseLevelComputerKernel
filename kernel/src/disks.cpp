@@ -1,9 +1,10 @@
+#include "unique_ptr.hpp"
+#include "array.hpp"
 #include "disks.hpp"
 #include "ata.hpp"
 #include "balecok.hpp"
 #include "console.hpp"
-#include "unique_ptr.hpp"
-#include "array.hpp"
+#include "fat32.hpp"
 
 namespace {
 array<disks::disk_descriptor, 4> _disks;
@@ -185,4 +186,8 @@ const disks::disk_descriptor* disks::mounted_disk(){
 
 const disks::partition_descriptor* disks::mounted_partition(){
     return _mounted_partition;
+}
+
+void disks::ls(){
+    fat32::ls(*_mounted_disk, *_mounted_partition);
 }

@@ -319,7 +319,9 @@ void mount_command(const char* params){
     }
 }
 
-void ls_command(const char*){}
+void ls_command(const char*){
+    disks::ls();
+    }
 }
 void init_shell(){
     current_input_length = 0;
