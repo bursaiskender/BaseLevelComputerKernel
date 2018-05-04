@@ -6,9 +6,6 @@
 #include "array.hpp"
 
 namespace {
-
-bool detected = false;
-
 array<disks::disk_descriptor, 4> _disks;
 uint64_t number_of_disks = 0;
 
@@ -30,7 +27,8 @@ struct boot_record_t {
 } __attribute__ ((packed));
 
 static_assert(sizeof(boot_record_t) == 512, "The boot record is 512 bytes long");
-
+const disks::disk_descriptor* _mounted_disk;
+const disks::partition_descriptor* _mounted_partition;
 } 
 
 void disks::detect_disks(){
@@ -45,14 +43,11 @@ void disks::detect_disks(){
         }
     }
 
-    detected = true;
+    _mounted_disk = nullptr;
+    _mounted_partition = nullptr;
 }
 
 uint64_t disks::detected_disks(){
-    if(!detected){
-        detect_disks();
-    }
-
     return number_of_disks;
 }
 
@@ -153,4 +148,29 @@ unique_heap_array<disks::partition_descriptor> disks::partitions(const disk_desc
 
         return partitions;
     }
+}
+
+void disks::mount(const disk_descriptor& disk, uint64_t uuid){
+    _mounted_disk = &disk;
+
+    if(_mounted_partition){
+        delete _mounted_partition;
+    }
+
+    for(auto& partition : partitions(disk)){
+        if(partition.uuid == uuid){
+            auto p = new partition_descriptor();
+            *p = partition;
+            _mounted_partition = p;
+            break;
+        }
+    }
+}
+
+const disks::disk_descriptor* disks::mounted_disk(){
+    return _mounted_disk;
+}
+
+const disks::partition_descriptor* disks::mounted_partition(){
+    return _mounted_partition;
 }

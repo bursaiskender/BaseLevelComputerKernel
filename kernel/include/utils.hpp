@@ -2,7 +2,7 @@
 #define UTILS_H
 
 #include "types.hpp"
-
+uint64_t parse(const char* str, const char* end);
 uint64_t parse(const char* str);
 bool str_contains(const char* a, char c);
 bool str_equals(const char* a, const char* b);
