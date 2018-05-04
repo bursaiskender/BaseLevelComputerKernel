@@ -3,6 +3,8 @@
 
 namespace {
 
+const bool DEBUG_MALLOC = false;
+
 struct bios_mmap_entry {
     uint32_t base_low;
     uint32_t base_high;
@@ -95,7 +97,7 @@ uint64_t* allocate_block(uint64_t blocks){
     auto pt = reinterpret_cast<pt_t>(reinterpret_cast<uintptr_t>(pdt[pdt_index]) & ~0xFFF);
 
     if(pt_index + blocks >= 512){
-        // unutnudfhudfhdfmmağğğğğğğğ benniiiiiii
+        // unutğamamammamm bennni
     }
 
     for(uint64_t i = 0; i < blocks; ++i){
@@ -108,6 +110,35 @@ uint64_t* allocate_block(uint64_t blocks){
     current_mmap_entry_position += blocks * BLOCK_SIZE;
 
     return block;
+}
+
+template<bool Debug>
+void debug_malloc(const char* point = nullptr){
+    if(Debug){
+        if(point){
+            k_print_line(point);
+        }
+
+        auto it = malloc_head;
+
+        k_print("next: ");
+        do {
+            k_printf("%h -> ", reinterpret_cast<uint64_t>(it));
+            it = it->next;
+        } while(it != malloc_head);
+
+        k_printf("%h\n", malloc_head);
+
+        it = malloc_head;
+
+        k_print("prev: ");
+        do {
+            k_printf("%h <- ", reinterpret_cast<uint64_t>(it));
+            it = it->prev;
+        } while(it != malloc_head);
+
+        k_printf("%h\n", malloc_head);
+    }
 }
 
 } 
@@ -145,17 +176,18 @@ uint64_t* k_malloc(uint64_t bytes){
             auto header = reinterpret_cast<malloc_header_chunk*>(block);
             header->size = MIN_BLOCKS * BLOCK_SIZE - META_SIZE;
 
+            header->next = current->next;
+            header->prev = current;
+
             current->next->prev = header;
             current->next = header;
-
-            header->next  = current->next;
-            header->prev = current;
 
             auto footer = reinterpret_cast<malloc_footer_chunk*>(
                 reinterpret_cast<uintptr_t>(block) + header->size + sizeof(malloc_header_chunk));
             footer->size = header->size;
         } else if(current->size >= bytes){
-            if(current->size - bytes - META_SIZE > MIN_SPLIT){
+
+            if(current->size > bytes + META_SIZE + MIN_SPLIT){
                 auto new_block_size = current->size - bytes - META_SIZE;
 
                 current->size = bytes;
@@ -176,21 +208,47 @@ uint64_t* k_malloc(uint64_t bytes){
                 auto new_footer = reinterpret_cast<malloc_footer_chunk*>(
                     reinterpret_cast<uintptr_t>(new_block) + new_block_size + sizeof(malloc_header_chunk));
                 new_footer->size = new_block_size;
+
+                debug_malloc<DEBUG_MALLOC>("after malloc split");
+
                 break;
             } else {
                 current->prev->next = current->next;
                 current->next->prev = current->prev;
+
+                debug_malloc<DEBUG_MALLOC>("after malloc no split");
+
                 break;
             }
         }
 
         current = current->next;
     }
+
     _used_memory += bytes + META_SIZE;
+
     current->prev = nullptr;
     current->next = nullptr;
+
     return reinterpret_cast<uint64_t*>(
         reinterpret_cast<uintptr_t>(current) + sizeof(malloc_header_chunk));
+}
+
+void k_free(uint64_t* block){
+    auto free_header = reinterpret_cast<malloc_header_chunk*>(
+        reinterpret_cast<uintptr_t>(block) - sizeof(malloc_header_chunk));
+
+    _used_memory -= free_header->size + META_SIZE;
+
+    auto header = malloc_head;
+
+    free_header->prev = header;
+    free_header->next = header->next;
+
+    header->next->prev = free_header;
+    header->next = free_header;
+
+    debug_malloc<DEBUG_MALLOC>("after free");
 }
 
 void load_memory_map(){
@@ -209,29 +267,16 @@ void load_memory_map(){
             os_entry.base = base;
             os_entry.size = length;
             os_entry.type = bios_entry.type;
-            
+
             if(os_entry.base == 0 && os_entry.type == 1){
                 os_entry.type = 7;
             }
+
             if(os_entry.type == 1){
                 _available_memory += os_entry.size;
             }
         }
     }
-}
-
-void k_free(uint64_t* block){
-    auto free_header = reinterpret_cast<malloc_header_chunk*>(
-        reinterpret_cast<uintptr_t>(block) - sizeof(malloc_header_chunk));
-    _used_memory -= free_header->size + META_SIZE;
-
-    auto header = malloc_head;
-
-    free_header->prev = header;
-    free_header->next = header->next;
-
-    header->next->prev = free_header;
-    header->next = free_header;
 }
 
 uint64_t mmap_entry_count(){
@@ -265,12 +310,15 @@ const char* str_e820_type(uint64_t type){
             return "Unknown";
     }
 }
+
 uint64_t available_memory(){
     return _available_memory;
 }
+
 uint64_t used_memory(){
     return _used_memory;
 }
+
 uint64_t free_memory(){
     return _available_memory - _used_memory;
 }
