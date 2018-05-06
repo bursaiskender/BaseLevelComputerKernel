@@ -119,11 +119,17 @@ void k_print(char key){
 
 
 void k_print(const char* string){
-    for(int i = 0; string[i] != 0; ++i){
+    for(uint64_t i = 0; string[i] != 0; ++i){
         k_print(string[i]);
     }
-
 }
+
+void k_print(const char* string, uint64_t end){
+    for(uint64_t i = 0; string[i] != 0 && i < end; ++i){
+        k_print(string[i]);
+    }
+}
+
 
 void wipeout(){
     current_line = 0;

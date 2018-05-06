@@ -95,7 +95,11 @@ public:
     T& operator[](size_type pos){
         return array[pos];
     }
-
+    
+    pointer_type get(){
+        return array;
+    }
+    
     pointer_type release(){
         pointer_type p = array;
         array = nullptr;
