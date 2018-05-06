@@ -102,18 +102,16 @@ void fat32::ls(const disks::disk_descriptor& disk, const disks::partition_descri
                     } else {
                         // normal dosya ismi
                     }
-
-                    k_print(entry.name, 11);
-                    k_print_line();
-
+                    
+                    k_print_line(entry.name, 11);
+                    
                     if(entry.attrib & 0x10){
                         k_print_line("Directory");
                     } else {
                         k_print_line("File");
                     }
-
-                    k_print(static_cast<uint64_t>(entry.file_size));
-                    k_print_line();
+                    
+                    k_print_line(static_cast<uint64_t>(entry.file_size));
                 }
             }
         }
