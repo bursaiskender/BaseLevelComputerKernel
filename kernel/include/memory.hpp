@@ -15,8 +15,8 @@ bool mmap_failed();
 uint64_t mmap_entry_count();
 const mmapentry& mmap_entry(uint64_t i);
 void init_memory_manager();
-uint64_t* k_malloc(uint64_t bytes);
-void k_free(uint64_t* block);
+void* k_malloc(uint64_t bytes);
+void k_free(void* block);
 template<typename T>
 T* k_malloc(){
     return reinterpret_cast<T*>(k_malloc(sizeof(T)));
