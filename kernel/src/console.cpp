@@ -37,30 +37,13 @@ uint16_t make_vga_entry(char c, uint8_t color){
     return c16 | color16 << 8;
 }
 
-}
-
-void set_column(long column){
-    current_column = column;
-}
-
-long get_column(){
-    return current_column;
-}
-
-void set_line(long line){ 
-    current_line = line; 
-}
-
-long get_line(){ 
-    return current_line; 
-}
-
-uint64_t digits(uint64_t number){
+template<typename N>
+uint64_t digits(N number){
     if(number < 10){
         return 1;
     }
 
-    int i = 0;
+    uint64_t i = 0;
 
     while(number != 0){
         number /= 10;
@@ -70,12 +53,14 @@ uint64_t digits(uint64_t number){
     return i;
 }
 
-void k_print(uint64_t number){
+template<int B, typename D>
+void print_unsigned(D number){
     if(number == 0){
         k_print('0');
         return;
     }
-    char buffer[20];
+
+    char buffer[B];
     int i = 0;
 
     while(number != 0){
@@ -90,12 +75,46 @@ void k_print(uint64_t number){
     }
 }
 
+} 
+
+void set_column(long column){
+    current_column = column;
+}
+
+long get_column(){
+    return current_column;
+}
+
+void set_line(long line){
+    current_line= line;
+}
+
+long get_line(){
+    return current_line;
+}
+
+void k_print(uint8_t number){
+    print_unsigned<3>(number);
+}
+
+void k_print(uint16_t number){
+    print_unsigned<5>(number);
+}
+
+void k_print(uint32_t number){
+    print_unsigned<10>(number);
+}
+
+void k_print(uint64_t number){
+    print_unsigned<20>(number);
+}
+
 void k_print(char key){
     if(key == '\n'){
         ++current_line;
         current_column = 0;
     } else if(key == '\t'){
-        k_print("    ");
+        k_print("  ");
     } else {
         uint16_t* vga_buffer = reinterpret_cast<uint16_t*>(0x0B8000);
 
@@ -104,7 +123,6 @@ void k_print(char key){
         ++current_column;
     }
 }
-
 
 void k_print(const char* string){
     for(uint64_t i = 0; string[i] != 0; ++i){
@@ -117,7 +135,6 @@ void k_print(const char* string, uint64_t end){
         k_print(string[i]);
     }
 }
-
 
 void wipeout(){
     current_line = 0;
@@ -144,12 +161,13 @@ void k_printf(const char* fmt, ...){
             k_print(ch);
         } else {
             ch = *(fmt++);
-            
+
             uint64_t min_width = 0;
             while(ch >= '0' && ch <= '9'){
                 min_width = 10 * min_width + (ch - '0');
                 ch = *(fmt++);
             }
+
             uint64_t min_digits = 0;
             if(ch == '.'){
                 ch = *(fmt++);
@@ -159,10 +177,12 @@ void k_printf(const char* fmt, ...){
                     ch = *(fmt++);
                 }
             }
+
             auto prev  = current_column;
-            
+
             if(ch == 'd'){
                 auto arg = va_arg(va, uint64_t);
+
                 if(min_digits > 0){
                     auto d = digits(arg);
                     if(min_digits > d){
@@ -175,8 +195,10 @@ void k_printf(const char* fmt, ...){
                         }
                     }
                 }
+
                 k_print(arg);
-            } else if(ch == 'h'){
+            }
+            else if(ch == 'h'){
                 k_print("0x");
 
                 uint8_t buffer[20];
@@ -198,12 +220,12 @@ void k_printf(const char* fmt, ...){
                         --min_digits;
                     }
                 }
-                
+
                 while(i >= 0){
                     uint8_t digit = buffer[i];
 
                     if(digit < 10){
-                         k_print(static_cast<char>('0' + digit));
+                        k_print(static_cast<char>('0' + digit));
                     } else {
                         switch(digit){
                             case 10:
@@ -229,7 +251,8 @@ void k_printf(const char* fmt, ...){
 
                     --i;
                 }
-            } 
+            }
+            //Memory
             else if(ch == 'm'){
                 auto memory= va_arg(va, uint64_t);
 
@@ -247,10 +270,12 @@ void k_printf(const char* fmt, ...){
                     k_print("B");
                 }
             }
+            //String
             else if(ch == 's'){
                 auto arg = va_arg(va, const char*);
                 k_print(arg);
             }
+
             if(min_width > 0){
                 auto width = current_column - prev;
 
