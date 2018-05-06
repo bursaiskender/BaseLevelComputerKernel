@@ -2,6 +2,7 @@
 #include "kernel_utils.hpp"
 #include "timer.hpp"
 #include "memory.hpp"
+#include "balecok.hpp"
 
 namespace {
 
@@ -99,8 +100,8 @@ bool select_device(ata::drive_descriptor& drive){
 } 
 
 void ata::detect_disks(){
-    drives = reinterpret_cast<drive_descriptor*>(k_malloc(4 * sizeof(drive_descriptor)));
-
+    drives = new drive_descriptor[4];
+    
     drives[0] = {ATA_PRIMARY, 0xE0, false, MASTER_BIT};
     drives[1] = {ATA_PRIMARY, 0xF0, false, SLAVE_BIT};
     drives[2] = {ATA_SECONDARY, 0xE0, false, MASTER_BIT};
