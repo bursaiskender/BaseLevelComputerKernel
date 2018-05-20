@@ -22,15 +22,15 @@ balecok.iso: bootloader.bin micro_kernel.bin kernel.bin filler.bin
 	cat filler.bin >> balecok.bin
 	dd status=noxfer conv=notrunc if=balecok.bin of=balecok.iso
 
-start-qemu: balecok.iso create_hdd
+start-qemu: balecok.iso hdd.img
 	qemu-system-x86_64 -fda balecok.iso -hda hdd.img -boot order=a
 
-bochs: balecok.iso
+bochs: balecok.iso hdd.img
 	echo balecok.iso
 	bochs -qf .bochsConfig -rc commands
 	rm commands
 
-debug: balecok.iso
+debug: balecok.iso hdd.img
 	echo "c" > commands
 	bochs -qf .bochsConfigDebug -rc commands
 	rm commands
@@ -50,8 +50,10 @@ devEnv:
 force_look:
 	true
 	
-create_hdd:
-	qemu-img create hdd.img 256M
+hdd.img:
+	dd if=/dev/zero of=hdd.img bs=516096c count=1000
+	(echo n; echo p; echo 1; echo ""; echo ""; echo t; echo c; echo a; echo 1; echo w;) | sudo fdisk -u -C1000 -S63 -H16 hdd.img
+
 	
 	
 clean:
