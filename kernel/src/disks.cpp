@@ -186,6 +186,6 @@ const disks::partition_descriptor* disks::mounted_partition(){
     return _mounted_partition;
 }
 
-void disks::ls(){
-    fat32::ls(*_mounted_disk, *_mounted_partition);
+vector<disks::file> disks::ls(){
+    return fat32::ls(*_mounted_disk, *_mounted_partition);
 }

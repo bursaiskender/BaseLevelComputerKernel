@@ -3,6 +3,7 @@
 
 #include "types.hpp"
 #include "array.hpp"
+#include "vector.hpp"
 
 namespace disks {
 
@@ -28,6 +29,14 @@ struct partition_descriptor {
     uint64_t sectors;
 };
 
+struct file {
+    char name[11];
+    bool directory;
+    bool hidden;
+    bool system;
+    uint64_t size;
+};
+
 void detect_disks();
 uint64_t detected_disks();
 
@@ -45,7 +54,7 @@ unique_heap_array<partition_descriptor> partitions(const disk_descriptor& disk);
 bool partition_exists(const disk_descriptor& disk, uint64_t uuid);
 
 void mount(const disk_descriptor& disk, uint64_t uuid);
-void ls();
+vector<file> ls();
 
 const disk_descriptor* mounted_disk();
 const partition_descriptor* mounted_partition();
