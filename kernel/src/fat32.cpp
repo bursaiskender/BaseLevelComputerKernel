@@ -5,6 +5,7 @@
 #include "console.hpp"
 
 namespace {
+
 struct fat_bs_t {
     uint8_t jump[3];
     char oem_name[8];
@@ -46,7 +47,6 @@ struct fat_is_t {
     uint8_t reserved_2[12];
     uint32_t signature_end;
 }__attribute__ ((packed));
-}
 
 static_assert(sizeof(fat_bs_t) == 512, "FAT Boot Sector is exactly one disk sector");
 
@@ -66,19 +66,33 @@ struct cluster_entry {
 } __attribute__ ((packed));
 
 static_assert(sizeof(cluster_entry) == 32, "A cluster entry is 32 bytes");
+
+template<typename T>
+void memcopy(T* destination, T* source, uint64_t size){
+    --source;
+    --destination;
+
+    while(size--){
+        *++destination = *++source;
+    }
+}
+
+}
 vector<disks::file> fat32::ls(const disks::disk_descriptor& disk, const disks::partition_descriptor& partition){
     vector<disks::file> files;
+
     unique_ptr<fat_bs_t> fat_bs(new fat_bs_t());
 
     if(!read_sectors(disk, partition.start, 1, fat_bs.get())){
-        // unutğöamammamam bennnnnni
+        return files;
     } else {
+
         auto fs_information_sector = partition.start + static_cast<uint64_t>(fat_bs->fs_information_sector);
 
         unique_ptr<fat_is_t> fat_is(new fat_is_t());
 
         if(!read_sectors(disk, fs_information_sector, 1, fat_is.get())){
-            // unutğöamammamam bennnnnni
+            return files;
         } else {
             uint64_t fat_begin = partition.start + fat_bs->reserved_sectors;
             uint64_t cluster_begin = fat_begin + (fat_bs->number_of_fat * fat_bs->sectors_per_fat_long);
@@ -89,37 +103,29 @@ vector<disks::file> fat32::ls(const disks::disk_descriptor& disk, const disks::p
             unique_heap_array<cluster_entry> root_cluster(entries);
 
             if(!read_sectors(disk, root_cluster_lba, sectors_per_cluster, root_cluster.get())){
-                // unuğğamammamam bennnnii
-                k_print("failed");
+                return files;
             } else {
                 for(cluster_entry& entry : root_cluster){
                     if(entry.name[0] == 0x0 || static_cast<unsigned char>(entry.name[0]) == 0xE5){
                         continue;
                     }
 
-                    if(entry.attrib == 0x0F){
-                            // uzun dosya ismi
-                    } else {
-                        // normal dosya ismi
-                    }
-                    
-                    k_print(entry.name, 11);
-                    if(entry.attrib & 0x1){
-                        k_print(".h");
-                    }
-                    if(entry.attrib & 0x2){
-                        k_print("system");
-                    }
-                    if(entry.attrib & 0x10){
-                        k_print_line("Directory");
-                    } else {
-                        k_print_line("File");
-                    }
-                    
-                    k_print_line(entry.file_size);
+                    disks::file file;
+
+                    if(entry.attrib == 0x0F){} 
+                    else {}
+
+                    file.hidden = entry.attrib & 0x1;
+                    file.system = entry.attrib & 0x2;
+                    file.directory = entry.attrib & 0x10;
+                    file.size = entry.file_size;
+                    memcopy(file.name, entry.name, 11);
+
+                    files.push_back(file);
                 }
             }
         }
     }
+
     return files;
 }

@@ -320,8 +320,31 @@ void mount_command(const char* params){
 }
 
 void ls_command(const char*){
-    disks::ls();
+    auto files = disks::ls();
+
+    for(auto& file : files){
+        k_print(file.name, 11);
+
+        if(file.directory){
+            k_print(" d ");
+        } else {
+            k_print(" f ");
+        }
+
+        if(file.hidden){
+            k_print(" .h ");
+        }
+
+        if(file.system){
+            k_print(" sys ");
+        }
+
+        if(!file.directory){
+            k_print_line(file.size);
+        }
     }
+}
+
 }
 void init_shell(){
     current_input_length = 0;
