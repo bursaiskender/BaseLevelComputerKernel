@@ -338,10 +338,7 @@ void ls_command(const char*){
         if(file.system){
             k_print(" sys ");
         }
-
-        if(!file.directory){
-            k_print_line(file.size);
-        }
+        k_print_line(file.size);
     }
 }
 
