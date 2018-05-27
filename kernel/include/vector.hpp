@@ -19,7 +19,7 @@ private:
 
 public:
     vector() : data(nullptr), _size(0), _capacity(0) {}
-    explicit vector(uint64_t s) : data(new T[s]), _size(s), _capacity(s) {}
+    explicit vector(uint64_t c) : data(new T[c]), _size(0), _capacity(c) {}
 
     vector(const vector& rhs) = delete;
     vector& operator=(const vector& rhs) = delete;
@@ -49,9 +49,12 @@ public:
         return _size;
     }
 
-    void push_back(T& element){
-        if(_capacity == _size){
-            _capacity= _capacity == 0 ? 1 : _capacity * 2;
+    void push_back(value_type& element){
+        if(_capacity == 0){
+            _capacity = 1;
+            data = new T[_capacity];
+        } else if(_capacity == _size){
+            _capacity= _capacity * 2;
             auto new_data = new T[_capacity];
 
             for(size_type i = 0; i < _size; ++i){
