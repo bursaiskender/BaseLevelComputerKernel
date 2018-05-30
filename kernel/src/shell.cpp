@@ -29,7 +29,7 @@ struct command_definition {
     void (*function)(const char*);
 };
 
-command_definition commands[13] = {
+command_definition commands[14] = {
     {"reboot", reboot_command},
     {"help", help_command},
     {"uptime", uptime_command},
@@ -43,6 +43,7 @@ command_definition commands[13] = {
     {"partitions", partitions_command},
     {"mount", mount_command},
     {"ls", ls_command},
+    {"free", free_command},
 };
 
 
@@ -346,6 +347,17 @@ void ls_command(const char*){
         k_print_line(file.size);
     }
 }
+
+void free_command(const char*){
+    if(!disks::mounted_partition() || !disks::mounted_disk()){
+        k_print_line("Nothing is mounted");
+
+        return;
+    }
+
+    k_printf("Free size: %m\n", disks::free_size());
+}
+
 
 }
 void init_shell(){

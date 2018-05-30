@@ -187,5 +187,16 @@ const disks::partition_descriptor* disks::mounted_partition(){
 }
 
 vector<disks::file> disks::ls(){
+    if(!_mounted_disk || !_mounted_partition){
+        return {};
+    }
+
     return fat32::ls(*_mounted_disk, *_mounted_partition);
+}
+
+uint64_t disks::free_size(){
+    if(!_mounted_disk || !_mounted_partition){
+        return 0;
+    }
+    return fat32::free_size(*_mounted_disk, *_mounted_partition);
 }
