@@ -23,6 +23,7 @@ void disks_command(const char* params);
 void partitions_command(const char* params);
 void mount_command(const char* params);
 void ls_command(const char* params);
+void free_command(const char* params);
 
 struct command_definition {
     const char* name;
@@ -64,14 +65,17 @@ void start_shell(){
 
                 k_print_line();
 
-                exec_command();
 
-                if(get_column() != 0){
-                    set_column(0);
-                    set_line(get_line() + 1);
+                if(current_input_length > 0){
+                    exec_command();
+
+                    if(get_column() != 0){
+                        set_column(0);
+                        set_line(get_line() + 1);
+                    }
+
+                    current_input_length = 0;
                 }
-
-                current_input_length = 0;
 
                 k_print("root@balecok # ");
             } else if(key == keyboard::KEY_BACKSPACE){

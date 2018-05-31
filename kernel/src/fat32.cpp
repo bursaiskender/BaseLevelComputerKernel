@@ -76,6 +76,41 @@ void memcopy(T* destination, const T* source, uint64_t size){
         *++destination = *++source;
     }
 }
+uint64_t cached_disk = -1;
+uint64_t cached_partition = -1;
+uint64_t partition_start;
+
+fat_bs_t* fat_bs = nullptr;
+fat_is_t* fat_is = nullptr;
+
+void cache_bs(const disks::disk_descriptor& disk, const disks::partition_descriptor& partition){
+    unique_ptr<fat_bs_t> fat_bs_tmp(new fat_bs_t());
+
+    if(read_sectors(disk, partition.start, 1, fat_bs_tmp.get())){
+        fat_bs = fat_bs_tmp.release();
+    } else {
+        fat_bs = nullptr;
+    }
+}
+
+void cache_is(const disks::disk_descriptor& disk, const disks::partition_descriptor& partition){
+    auto fs_information_sector = partition.start + static_cast<uint64_t>(fat_bs->fs_information_sector);
+
+    unique_ptr<fat_is_t> fat_is_tmp(new fat_is_t());
+
+    if(read_sectors(disk, fs_information_sector, 1, fat_is_tmp.get())){
+        fat_is = fat_is_tmp.release();
+    } else {
+        fat_is = nullptr;
+    }
+}
+
+uint64_t cluster_lba(uint64_t cluster){
+    uint64_t fat_begin = partition_start + fat_bs->reserved_sectors;
+    uint64_t cluster_begin = fat_begin + (fat_bs->number_of_fat * fat_bs->sectors_per_fat_long);
+
+    return cluster_begin + (cluster - 2 ) * fat_bs->sectors_per_cluster;
+}
 
 }
 vector<disks::file> fat32::ls(const disks::disk_descriptor& disk, const disks::partition_descriptor& partition){
