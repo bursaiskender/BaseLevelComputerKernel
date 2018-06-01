@@ -4,7 +4,7 @@ jmp second_step
 
 %include "intel_16.asm"
 
-KERNEL_BASE equ 0x100      
+KERNEL_BASE equ 0x100     
 sectors equ 0x48          
 bootdev equ 0x0
 
@@ -21,23 +21,27 @@ second_step:
 
     jc reset_failed
 
-
     mov ax, KERNEL_BASE
     mov es, ax
-    xor bx, bx
 
-    xor si, si
+    xor di, di
+    xchg bx, bx
 
 .next:
-    mov ah, 0x2        
-    mov al, 1           
+    xor bx, bx
+
+    mov ah, 0x2         
+    mov al, 1          
     mov ch, [cylinder]  
     mov cl, [sector]    
-    mov dh, [head]     
+    mov dh, [head]      
     mov dl, bootdev    
     int 0x13
 
     jc read_failed
+
+    test ah, ah
+    jne read_failed
 
     cmp al, 1
     jne read_failed
@@ -45,8 +49,8 @@ second_step:
     mov si, star
     call print_16
 
-    inc si
-    cmp si, sectors
+    inc di
+    cmp di, sectors
     jne .continue
 
     mov si, kernel_loaded
@@ -81,9 +85,8 @@ second_step:
 
 .next_sector:
     mov ax, es
-    add ax, 0x20    
+    add ax, 0x20   
     mov es, ax
-    xor bx, bx
 
     jmp .next
 
@@ -103,20 +106,17 @@ error_end:
 
     jmp $
 
-; defines
+sector db 1
+head db 0
+cylinder db 1
 
-    sector db 1
-    head db 0
-    cylinder db 1
 
-    load_kernel db 'Attempt to load the kernel...', 0
-    kernel_loaded db 'Kernel fully loaded', 0
-    star db '*', 0
+load_kernel db 'Attempt to load the kernel...', 0
+kernel_loaded db 'Kernel fully loaded', 0
+star db '*', 0
 
-    reset_failed_msg db 'Reset disk failed', 0
-    read_failed_msg db 'Read disk failed', 0
-    load_failed db 'Kernel loading failed', 0
+reset_failed_msg db 'Reset disk failed', 0
+read_failed_msg db 'Read disk failed', 0
+load_failed db 'Kernel loading failed', 0
 
-; bootsec
-
-    times 512-($-$$) db 0
+times 512-($-$$) db 0

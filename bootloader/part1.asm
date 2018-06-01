@@ -5,7 +5,7 @@ jmp rm_start
 %include "intel_16.asm"
 
 rm_start:
-    mov ax, 0x7C0
+    mov ax, 0x9C0
     add ax, 288
     mov ss, ax
     mov sp, 4096
@@ -23,6 +23,9 @@ rm_start:
     call print_line_16
 
     mov si, header_1
+    call print_line_16
+
+    mov si, header_2
     call print_line_16
 
     call new_line_16
@@ -50,17 +53,17 @@ rm_start:
 
     bootdev equ 0x0
     sectors equ 1
-    
+
     mov ax, 0x90
     mov es, ax
     xor bx, bx
 
     mov ah, 0x2         
-    mov al, sectors           
-    xor ch, ch         
-    mov cl, 2         
-    xor dh, dh
-    mov dl, bootdev 
+    mov al, sectors     
+    xor ch, ch          
+    mov cl, 2           
+    xor dh, dh          
+    mov dl, bootdev     
     int 0x13
 
     jc read_failed
@@ -85,20 +88,18 @@ error_end:
     call print_line_16
 
     jmp $
+    
+header_0 db '_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_', 0
+header_1 db 'BaLeCoK NEW Bootloader', 0
+header_2 db '_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_-_', 0
 
-; defines
+press_key_msg db 'Press any key to load the kernel...', 0
+load_kernel db 'Attempt to load the part 2...', 0
 
-    header_0 db 'BaLeCoK -> Base Level Computer Kernel', 0
-    header_1 db 'Developed and Maintained by @BTaskaya', 0
+reset_failed_msg db 'Reset disk failed', 0
+read_failed_msg db 'Read disk failed', 0
+load_failed db 'Part 2 loading failed', 0
 
-    press_key_msg db 'Press any key to boot p...', 0
-    load_kernel db 'Attempt to boot the part 2...', 0
 
-    reset_failed_msg db 'Disk reseting failed', 0
-    read_failed_msg db 'Disk read operation failed', 0
-    load_failed db 'Part 2 loading failed', 0
-
-; bootsec
-
-    times 510-($-$$) db 0
-    dw 0xAA55
+times 510-($-$$) db 0
+dw 0xAA55
