@@ -12,6 +12,7 @@
 namespace {
 vector<char*> history;
 uint64_t history_index;
+bool shift = false;
 
 void reboot_command(const char* params);
 void help_command(const char* params);
@@ -67,8 +68,12 @@ void start_shell(){
         auto key = keyboard::get_char();
 
         if(key & 0x80){
-            // shift buyuk karakter 
-        } else {
+            key &= ~(0x80);
+            if(key == keyboard::KEY_LEFT_SHIFT || key == keyboard::KEY_RIGHT_SHIFT){
+                shift = false;
+            }
+        } 
+        else {
             if(key == keyboard::KEY_ENTER){
                 current_input[current_input_length] = '\0';
 
@@ -86,6 +91,8 @@ void start_shell(){
                 }
 
                 k_print("root@balecok # ");
+            } else if(key == keyboard::KEY_LEFT_SHIFT || key == keyboard::KEY_RIGHT_SHIFT){
+                shift = true;
             } else if(key == keyboard::KEY_UP || key == keyboard::KEY_DOWN){
                 if(history.size() > 0){
                     if(key == keyboard::KEY_UP){
@@ -128,9 +135,12 @@ void start_shell(){
                     --current_input_length;
                 }
             } else {
-                auto qwerty_key = keyboard::key_to_ascii(key);
+                auto qwerty_key = 
+                    shift
+                    ? keyboard::shift_key_to_ascii(key)
+                    : keyboard::key_to_ascii(key);
 
-                if(qwerty_key > 0){
+                if(qwerty_key){
                     current_input[current_input_length++] = qwerty_key;
                     k_print(qwerty_key);
                 }
