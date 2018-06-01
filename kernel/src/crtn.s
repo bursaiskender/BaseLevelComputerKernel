@@ -1,7 +1,11 @@
+.intel_syntax noprefix
+
 .section .init
-	popq %rbp
+
+	pop rbp
 	ret
 
 .section .fini
-	popq %rbp
+
+	pop rbp
     ret
