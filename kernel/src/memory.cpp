@@ -4,7 +4,7 @@
 namespace {
 
 const bool DEBUG_MALLOC = false;
-const bool TRACE_MALLOC = true;
+const bool TRACE_MALLOC = false;
 
 struct bios_mmap_entry {
     uint32_t base_low;
