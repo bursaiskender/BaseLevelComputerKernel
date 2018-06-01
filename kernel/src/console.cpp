@@ -2,6 +2,7 @@
 
 #include "console.hpp"
 #include "types.hpp"
+#include "utils.hpp"
 
 namespace {
 

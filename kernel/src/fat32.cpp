@@ -3,6 +3,7 @@
 #include "fat32.hpp"
 #include "types.hpp"
 #include "console.hpp"
+#include "utils.hpp"
 
 namespace {
 
