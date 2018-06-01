@@ -1,5 +1,5 @@
 .PHONY: default clean bootloader kernel micro_kernel force_look qemu bochs debug
-default: bootloader micro_kernel kernel balecok.iso start-qemu
+default: bootloader micro_kernel kernel balecok.iso
 
 bootloader: force_look
 	cd bootloader; $(MAKE)
@@ -22,15 +22,15 @@ balecok.iso: filler.bin
 	cat filler.bin >> balecok.bin
 	dd status=noxfer conv=notrunc if=balecok.bin of=balecok.iso
 
-start-qemu: balecok.iso hdd.img
+start-qemu: default
 	qemu-system-x86_64 -fda balecok.iso -hda hdd.img -boot order=a
 
-bochs: balecok.iso hdd.img
+bochs: default
 	echo balecok.iso
 	bochs -qf .bochsConfig -rc commands
 	rm commands
 
-debug: balecok.iso hdd.img
+debug: default
 	echo "c" > commands
 	bochs -qf .bochsConfigDebug -rc commands
 	rm commands
