@@ -399,6 +399,9 @@ void ls_command(const char*){
     auto files = disks::ls();
 
     for(auto& file : files){
+        if(file.hidden){
+            continue;
+        }
         k_print(file.name, 11);
 
         if(file.directory){
