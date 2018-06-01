@@ -2,11 +2,8 @@
 #include "utils.hpp"
 
 
-string::string(const char* s){
-    _size = str_len(s);
-    _capacity = _size + 1;
-    _data = new char[_capacity];
-    memcopy(_data, s, _capacity);
+string::string(const string& rhs){ ::string(const char* s){
+    *this = rhs;
 }
 
 string::string(size_t capacity){
@@ -34,13 +31,7 @@ string& string::operator=(const string& rhs){
 }
 
 string::string(string&& rhs){
-    _size = rhs._size;
-    _capacity = rhs._capacity;
-    _data = rhs._data;
-
-    rhs._size = 0;
-    rhs._capacity = 0;
-    rhs._data = nullptr;
+    *this = rhs;
 }
 
 string& string::operator=(string&& rhs){
