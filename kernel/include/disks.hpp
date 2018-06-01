@@ -61,6 +61,8 @@ uint64_t free_size();
 const disk_descriptor* mounted_disk();
 const partition_descriptor* mounted_partition();
 
+const char* current_directory();
+void set_current_directory(const char* directory = nullptr);
 }
 
 #endif

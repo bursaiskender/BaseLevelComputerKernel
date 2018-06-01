@@ -28,13 +28,15 @@ void mount_command(const char* params);
 void unmount_command(const char* params);
 void ls_command(const char* params);
 void free_command(const char* params);
+void cd_command(const char* params);
+void pwd_command(const char* params);
 
 struct command_definition {
     const char* name;
     void (*function)(const char*);
 };
 
-command_definition commands[15] = {
+command_definition commands[17] = {
     {"reboot", reboot_command},
     {"help", help_command},
     {"uptime", uptime_command},
@@ -50,6 +52,8 @@ command_definition commands[15] = {
     {"unmount", unmount_command},
     {"ls", ls_command},
     {"free", free_command},
+    {"cd", cd_command},
+    {"pwd", pwd_command},
 };
 
 
@@ -414,6 +418,23 @@ void free_command(const char*){
     k_printf("Free size: %m\n", disks::free_size());
 }
 
+void pwd_command(const char*){
+    auto cd = disks::current_directory();
+
+    if(!cd){
+        k_print_line("/");
+    } else {
+        k_printf("/%s\n", cd);
+    }
+}
+
+void cd_command(const char* params){
+    if(!*(params+2)){
+        disks::set_current_directory();
+    } else {
+        disks::set_current_directory(params+3);
+    }
+}
 
 }
 void init_shell(){

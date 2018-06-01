@@ -5,6 +5,7 @@
 #include "balecok.hpp"
 #include "console.hpp"
 #include "fat32.hpp"
+#include "utils.hpp"
 
 namespace {
 array<disks::disk_descriptor, 4> _disks;
@@ -30,6 +31,7 @@ struct boot_record_t {
 static_assert(sizeof(boot_record_t) == 512, "The boot record is 512 bytes long");
 const disks::disk_descriptor* _mounted_disk;
 const disks::partition_descriptor* _mounted_partition;
+char* pwd = nullptr;
 } 
 
 void disks::detect_disks(){
@@ -209,4 +211,22 @@ uint64_t disks::free_size(){
         return 0;
     }
     return fat32::free_size(*_mounted_disk, *_mounted_partition);
+}
+
+
+const char* disks::current_directory(){
+    return pwd;
+}
+
+void disks::set_current_directory(const char* directory){
+    if(pwd){
+        delete[] pwd;
+    }
+
+    if(!directory){
+        pwd = nullptr;
+    } else {
+        pwd = new char[str_len(directory) + 1];
+        str_copy(directory, pwd);
+    }
 }
