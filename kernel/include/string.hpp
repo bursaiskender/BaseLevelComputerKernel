@@ -14,6 +14,7 @@ private:
     size_t _capacity;
 
 public:
+    string();
     string(const char* s);
     explicit string(size_t capacity);
 
@@ -29,8 +30,12 @@ public:
     ~string();
 
     size_t size() const;
-
+    bool empty() const;
+    
     const char* c_str() const;
+    
+    string operator+(char c) const;
+    string& operator+=(char c);
 
     iterator begin();
     iterator end();
