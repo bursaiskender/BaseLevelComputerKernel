@@ -55,6 +55,14 @@ public:
         return _capacity;
     }
     
+    const value_type& operator[](size_type pos) const {
+        return data[pos];
+    }
+
+    value_type& operator[](size_type pos){
+        return data[pos];
+    }
+
     void push_back(value_type& element){
         if(_capacity == 0){
             _capacity = 1;

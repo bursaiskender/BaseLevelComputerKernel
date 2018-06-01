@@ -80,8 +80,42 @@ void start_shell(){
                 }
 
                 k_print("root@balecok # ");
-            } else if(key == keyboard::KEY_UP){
-                // Unutğğapğamamamammamamam Bennnnii
+            } else if(key == keyboard::KEY_UP || key == keyboard::KEY_DOWN){
+                if(history.size() > 0){
+                    if(key == keyboard::KEY_UP){
+                        if(history_index == 0){
+                            continue;
+                        }
+
+                        --history_index;
+                    } else {
+                        if(history_index == history.size()){
+                            continue;
+                        }
+
+                        ++history_index;
+                    }
+
+                    set_column(6);
+
+                    for(uint64_t i = 0; i < current_input_length; ++i){
+                        k_print(' ');
+                    }
+
+                    set_column(6);
+
+                    current_input_length = 0;
+
+                    if(history_index < history.size()){
+                        auto saved = history[history_index];
+                        while(*saved){
+                            current_input[current_input_length++] = *saved;
+                            k_print(*saved);
+
+                            ++saved;
+                        }
+                    }
+                }
             } else if(key == keyboard::KEY_BACKSPACE){
                 if(current_input_length > 0){
                     k_print('\b');
@@ -101,7 +135,12 @@ void start_shell(){
 
 void exec_command(){
     char buffer[50];
+    auto saved = new char[current_input_length + 1];
+    memcopy(saved, current_input, current_input_length);
+    saved[current_input_length] = '\0';
 
+    history.push_back(saved);
+    history_index = history.size();
     for(auto& command : commands){
         const char* input_command = current_input;
         if(str_contains(current_input, ' ')){
