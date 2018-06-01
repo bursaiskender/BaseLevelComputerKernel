@@ -49,13 +49,14 @@ rm_start:
     jc reset_failed
 
     bootdev equ 0x0
-
+    sectors equ 1
+    
     mov ax, 0x90
     mov es, ax
     xor bx, bx
 
     mov ah, 0x2         
-    mov al, 1           
+    mov al, sectors           
     xor ch, ch         
     mov cl, 2         
     xor dh, dh
@@ -64,12 +65,12 @@ rm_start:
 
     jc read_failed
 
-    cmp al, 1
+    cmp al, sectors
     jne read_failed
 
     jmp dword 0x90:0x0
 
-    reset_failed:
+reset_failed:
     mov si, reset_failed_msg
     call print_line_16
 
@@ -90,12 +91,12 @@ error_end:
     header_0 db 'BaLeCoK -> Base Level Computer Kernel', 0
     header_1 db 'Developed and Maintained by @BTaskaya', 0
 
-    press_key_msg db 'Press any key to boot kernel...', 0
-    load_kernel db 'Attempt to boot the kernel...', 0
+    press_key_msg db 'Press any key to boot p...', 0
+    load_kernel db 'Attempt to boot the part 2...', 0
 
     reset_failed_msg db 'Disk reseting failed', 0
     read_failed_msg db 'Disk read operation failed', 0
-    load_failed db 'Kernel loading failed', 0
+    load_failed db 'Part 2 loading failed', 0
 
 ; bootsec
 

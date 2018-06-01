@@ -1,23 +1,22 @@
-default: start-qemu
+.PHONY: default clean bootloader kernel micro_kernel force_look qemu bochs debug
+default: bootloader micro_kernel kernel balecok.iso start-qemu
 
-bootloader.bin: force_look
+bootloader: force_look
 	cd bootloader; $(MAKE)
-	
-MICRO_KERNEL_SRC=$(wildcard micro_kernel/*.asm)
-MICRO_KERNEL_UTILS_SRC=$(wildcard micro_kernel/utils/*.asm)
 
-micro_kernel.bin: force_look
+micro_kernel: force_look
 	cd micro_kernel; $(MAKE)
 
-kernel.bin: force_look
+kernel: force_look
 	cd kernel; $(MAKE)
 	
-filler.bin: kernel.bin
+filler.bin: kernel/kernel.bin micro_kernel/micro_kernel.bin bootloader/part1.bin bootloader/part2.bin bootloader/padding.bin
 	bash prepForLoading.sh
 	
-balecok.iso: bootloader.bin micro_kernel.bin kernel.bin filler.bin
+balecok.iso: filler.bin
 	cat bootloader/part1.bin > balecok.bin
 	cat bootloader/part2.bin >> balecok.bin
+	cat bootloader/padding.bin >> balecok.bin
 	cat micro_kernel/micro_kernel.bin >> balecok.bin
 	cat kernel/kernel.bin >> balecok.bin
 	cat filler.bin >> balecok.bin
@@ -55,8 +54,6 @@ hdd.img:
 	dd if=/dev/zero of=hdd.img bs=516096c count=1000
 	(echo n; echo p; echo 1; echo ""; echo ""; echo t; echo c; echo a; echo 1; echo w;) | sudo fdisk -u -C1000 -S63 -H16 hdd.img
 
-	
-	
 clean:
 	cd bootloader; $(MAKE) clean
 	cd kernel; $(MAKE) clean
