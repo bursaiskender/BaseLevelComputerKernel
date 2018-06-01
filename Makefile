@@ -16,7 +16,8 @@ filler.bin: kernel.bin
 	bash prepForLoading.sh
 	
 balecok.iso: bootloader.bin micro_kernel.bin kernel.bin filler.bin
-	cat bootloader/bootloader.bin > balecok.bin
+	cat bootloader/part1.bin > balecok.bin
+	cat bootloader/part2.bin >> balecok.bin
 	cat micro_kernel/micro_kernel.bin >> balecok.bin
 	cat kernel/kernel.bin >> balecok.bin
 	cat filler.bin >> balecok.bin

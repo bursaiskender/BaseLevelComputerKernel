@@ -1,8 +1,11 @@
-bootloader.bin: balecokBaseBootloader.asm
-	nasm -w+all -f bin -o bootloader.bin balecokBaseBootloader.asm
+default: part1.bin part2.bin
 
-devEnv: balecokBaseBootloader.asm intel_16.asm
-	geany balecokBaseBootloader.asm intel_16.asm
+part1.bin: part1.asm
+	nasm -w+all -f bin -o part1.bin part1.asm
+
+part2.bin: part2.asm
+	nasm -w+all -f bin -o part2.bin part2.asm
 
 clean:
-	rm -f bootloader.bin
+	rm -f part1.bin
+	rm -f part2.bin
