@@ -7,8 +7,10 @@
 #include "utils.hpp"
 #include "memory.hpp"
 #include "disks.hpp"
- 
+#include "vector.hpp"
+
 namespace {
+vector<char*> history;
 
 void reboot_command(const char* params);
 void help_command(const char* params);
@@ -77,6 +79,8 @@ void start_shell(){
                 }
 
                 k_print("root@balecok # ");
+            } else if(key == keyboard::KEY_UP){
+                // Unutğğapğamamamammamamam Bennnnii
             } else if(key == keyboard::KEY_BACKSPACE){
                 if(current_input_length > 0){
                     k_print('\b');
@@ -366,6 +370,7 @@ void init_shell(){
     clear_command(0);
 
     k_print("root@balecok # ");
-
+    k_print_line(history.capacity());
+    
     start_shell();
 }

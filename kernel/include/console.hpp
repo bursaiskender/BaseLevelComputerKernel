@@ -22,6 +22,8 @@ void k_print(uint64_t number);
 
 void k_printf(const char* fmt, ...);
 
+void next_line();
+
 template<typename... Arguments>
 typename enable_if<(sizeof...(Arguments) == 0), void>::type k_print_line(Arguments... args){
     k_print('\n');

@@ -132,17 +132,6 @@ void k_print(char key){
     }
 }
 
-
-template<typename T>
-void memcopy(T* destination, const T* source, uint64_t size){
-    --source;
-    --destination;
-
-    while(size--){
-        *++destination = *++source;
-    }
-}
-
 void next_line(){
     ++current_line;
 

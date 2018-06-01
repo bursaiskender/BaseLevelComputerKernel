@@ -68,15 +68,6 @@ struct cluster_entry {
 
 static_assert(sizeof(cluster_entry) == 32, "A cluster entry is 32 bytes");
 
-template<typename T>
-void memcopy(T* destination, const T* source, uint64_t size){
-    --source;
-    --destination;
-
-    while(size--){
-        *++destination = *++source;
-    }
-}
 uint64_t cached_disk = -1;
 uint64_t cached_partition = -1;
 uint64_t partition_start;
