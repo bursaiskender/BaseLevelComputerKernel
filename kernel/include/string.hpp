@@ -28,7 +28,9 @@ public:
 
 
     ~string();
-
+    
+    void clear();
+    
     size_t size() const;
     size_t capacity() const;
     

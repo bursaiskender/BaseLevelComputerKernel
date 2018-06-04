@@ -16,27 +16,27 @@ vector<char*> history;
 uint64_t history_index;
 bool shift = false;
 
-void reboot_command(const char* params);
-void help_command(const char* params);
-void uptime_command(const char* params);
-void clear_command(const char* params);
-void date_command(const char* params);
-void sleep_command(const char* params);
-void echo_command(const char* params);
-void mmap_command(const char* params);
-void memory_command(const char* params);
-void disks_command(const char* params);
-void partitions_command(const char* params);
-void mount_command(const char* params);
-void unmount_command(const char* params);
-void ls_command(const char* params);
-void free_command(const char* params);
-void cd_command(const char* params);
-void pwd_command(const char* params);
+void reboot_command(const vector<string>& params);
+void help_command(const vector<string>& params);
+void uptime_command(const vector<string>& params);
+void clear_command(const vector<string>& params);
+void date_command(const vector<string>& params);
+void sleep_command(const vector<string>& params);
+void echo_command(const vector<string>& params);
+void mmap_command(const vector<string>& params);
+void memory_command(const vector<string>& params);
+void disks_command(const vector<string>& params);
+void partitions_command(const vector<string>& params);
+void mount_command(const vector<string>& params);
+void unmount_command(const vector<string>& params);
+void ls_command(const vector<string>& params);
+void free_command(const vector<string>& params);
+void cd_command(const vector<string>& params);
+void pwd_command(const vector<string>& params);
 
 struct command_definition {
     const char* name;
-    void (*function)(const char*);
+    void (*function)(const vector<string>&);
 };
 
 command_definition commands[17] = {
@@ -167,7 +167,8 @@ void exec_command(){
         }
 
         if(str_equals(input_command, command.name)){
-            command.function(current_input);
+            auto params = split(string(current_input));;
+            command.function(params);
 
             return;
         }
@@ -176,15 +177,15 @@ void exec_command(){
     k_printf("The command \"%s\" does not exist\n", current_input);
 }
 
-void clear_command(const char*){
+void clear_command(const vector<string>&){
     wipeout();
 }
 
-void reboot_command(const char*){
+void reboot_command(const vector<string>&){
     interrupt<60>();
 }
 
-void help_command(const char*){
+void help_command(const vector<string>&){
     k_print("Available commands:\n");
 
     for(auto& command : commands){
@@ -193,7 +194,7 @@ void help_command(const char*){
     }
 }
 
-void uptime_command(const char*){
+void uptime_command(const vector<string>&){
     k_printf("Uptime: %ds\n", timer_seconds());
 }
 
@@ -212,7 +213,7 @@ uint8_t get_RTC_register(int reg) {
       return in_byte(cmos_data);
 }
 
-void date_command(const char*){
+void date_command(const vector<string>&){
     uint64_t second;
     uint64_t minute;
     uint64_t hour;
@@ -281,16 +282,19 @@ void date_command(const char*){
 }
 
 
-void sleep_command(const char* params){
-    const char* delay_str = params + 6;
-    sleep_ms(parse(delay_str) * 1000);
+void sleep_command(const vector<string>& params){
+    sleep_ms(parse(params[1]) * 1000);
 }
 
-void echo_command(const char* params){
-    k_print_line(params + 5);
+void echo_command(const vector<string>& params){
+    for(uint64_t i = 1; i < params.size(); ++i){
+        k_print(params[i]);
+        k_print(' ');
+    }
+    k_print_line();
 }
 
-void mmap_command(const char*){
+void mmap_command(const vector<string>&){
     if(mmap_failed()){
         k_print_line("The mmap was not correctly loaded from e820");
     } else {
@@ -306,7 +310,7 @@ void mmap_command(const char*){
 }
 
 
-void memory_command(const char*){
+void memory_command(const vector<string>&){
     if(mmap_failed()){
         k_print_line("The mmap was not correctly loaded from e820");
     } else {
@@ -317,7 +321,7 @@ void memory_command(const char*){
     }
 }
 
-void disks_command(const char*){
+void disks_command(const vector<string>&){
     k_print_line("UUID       Type");
 
     for(uint64_t i = 0; i < disks::detected_disks(); ++i){
@@ -327,10 +331,8 @@ void disks_command(const char*){
     }
 }
 
-void partitions_command(const char* params){
-    const char* delay_str = params + 11;
-
-    auto uuid = parse(delay_str);
+void partitions_command(const vector<string>& params){
+    auto uuid = parse(params[1]);
 
     if(disks::disk_exists(uuid)){
         auto partitions = disks::partitions(disks::disk_by_uuid(uuid));
@@ -349,8 +351,8 @@ void partitions_command(const char* params){
     }
 }
 
-void mount_command(const char* params){
-    if(!*(params+5)){
+void mount_command(const vector<string>& params){
+    if(params.size() == 1){
         auto md = disks::mounted_disk();
         auto mp = disks::mounted_partition();
 
@@ -360,15 +362,8 @@ void mount_command(const char* params){
             k_print_line("Nothing is mounted");
         }
     } else {
-        const char* it = params + 6;
-        const char* it_end = it;
-
-        while(*it_end != ' '){
-            ++it_end;
-        }
-
-        auto disk_uuid = parse(it, it_end);
-        auto partition_uuid = parse(it_end + 1);
+        auto disk_uuid = parse(params[1]);
+        auto partition_uuid = parse(params[2]);
 
         if(disks::disk_exists(disk_uuid)){
             auto& disk = disks::disk_by_uuid(disk_uuid);
@@ -383,7 +378,7 @@ void mount_command(const char* params){
     }
 }
 
-void unmount_command(const char* ){
+void unmount_command(const vector<string>& ){
     if(!disks::mounted_partition() || !disks::mounted_disk()){
         k_print_line("Nothing is mounted");
 
@@ -393,25 +388,13 @@ void unmount_command(const char* ){
     disks::unmount();
 }
 
-void ls_command(const char* params){
-    string par(params);
-    k_printf("%h\n", reinterpret_cast<size_t>(&par));
-
-    k_printf("%h\n", reinterpret_cast<size_t>(par.c_str()));
-    k_print_line(par.size());
-    k_print_line(par.capacity());
-
-    k_print_line(par.c_str());
-    k_print_line(par);
-
-    auto parts = split(par);
-
-    k_print_line(parts.size());
-
-    for(auto& part : parts){
-        k_print_line(part);
+void ls_command(const vector<string>& params){
+    bool show_hidden_files = false;
+    if(params.size() > 1){
+        for(size_t i = 1; i < params.size(); ++i){
+            // unuğtğğğağğğğmamamamammaa bennnnni
+        }
     }
-
     if(!disks::mounted_partition() || !disks::mounted_disk()){
         k_print_line("Nothing is mounted");
         return;
@@ -419,7 +402,7 @@ void ls_command(const char* params){
     auto files = disks::ls();
 
     for(auto& file : files){
-        if(file.hidden){
+        if(file.hidden && !show_hidden_files){
             continue;
         }
         k_print(file.name, 11);
@@ -441,7 +424,7 @@ void ls_command(const char* params){
     }
 }
 
-void free_command(const char*){
+void free_command(const vector<string>&){
     if(!disks::mounted_partition() || !disks::mounted_disk()){
         k_print_line("Nothing is mounted");
 
@@ -451,21 +434,21 @@ void free_command(const char*){
     k_printf("Free size: %m\n", disks::free_size());
 }
 
-void pwd_command(const char*){
+void pwd_command(const vector<string>&){
     auto cd = disks::current_directory();
 
-    if(!cd){
-        k_print_line("/");
+    if(cd){
+        k_print_line('/');
     } else {
         k_printf("/%s\n", cd);
     }
 }
 
-void cd_command(const char* params){
-    if(!*(params+2)){
+void cd_command(const vector<string>& params){
+    if(params.size() == 1){
         disks::set_current_directory();
     } else {
-        disks::set_current_directory(params+3);
+        disks::set_current_directory(params[1]);
     }
 }
 
@@ -474,7 +457,7 @@ void init_shell(){
     current_input_length = 0;
     history_index = 0;
     
-    clear_command(0);
+    wipeout();
 
     k_print("root@balecok # ");
     
