@@ -14,6 +14,8 @@ vector<string> split(const string& s){
             current += c;
         }
     }
-
+    if(!current.empty()){
+        parts.push_back(current);
+    }
     return move(parts);
 }
