@@ -158,6 +158,11 @@ void k_print(const char* string){
         k_print(string[i]);
     }
 }
+void k_print(const string& s){
+    for(auto c : s){
+        k_print(c);
+    }
+}
 
 void k_print(const char* string, uint64_t end){
     for(uint64_t i = 0; string[i] != 0 && i < end; ++i){
