@@ -1,50 +1,39 @@
-default: start-qemu
+.PHONY: default clean bootloader kernel micro_kernel force_look qemu bochs debug
+default: bootloader micro_kernel kernel balecok.iso
 
-MICRO_KERNEL_SRC=$(wildcard micro_kernel/*.asm)
-MICRO_KERNEL_UTILS_SRC=$(wildcard micro_kernel/utils/*.asm)
+bootloader: force_look
+	cd bootloader; $(MAKE)
 
-bootloader.bin: bootloader/balecokBaseBootloader.asm
-	nasm -w+all -f bin -o bootloader.bin bootloader/balecokBaseBootloader.asm
+micro_kernel: force_look
+	cd micro_kernel; $(MAKE)
 
-micro_kernel.bin: $(MICRO_KERNEL_SRC) $(MICRO_KERNEL_UTILS_SRC)
-	nasm -w+all -f bin -o micro_kernel.bin micro_kernel/micro_kernel.asm
-	nasm -D DEBUG -g -w+all -f elf64 -o micro_kernel.g micro_kernel/micro_kernel.asm
-	bash genaddr.sh
+kernel: force_look
+	cd kernel; $(MAKE)
 	
-KERNEL_FLAGS=-masm=intel -Ikernel/include/ -O1 -std=c++11 -Wall -Wextra -fno-exceptions -fno-rtti -ffreestanding
-KERNEL_LINK_FLAGS=-std=c++11 -T linker.ld -ffreestanding -O1 -nostdlib
-KERNEL_O_FILES=kernel.o keyboard.o console.o kernel_utils.o
-
-kernel.o: kernel/src/kernel.cpp
-	g++ $(KERNEL_FLAGS) -c kernel/src/kernel.cpp -o kernel.o
-
-keyboard.o:	kernel/src/keyboard.cpp
-	g++ $(KERNEL_FLAGS) -c kernel/src/keyboard.cpp -o keyboard.o
- 
-console.o: kernel/src/console.cpp
-	g++ $(KERNEL_FLAGS) -c kernel/src/console.cpp -o console.o
-
-kernel_utils.o: kernel/src/kernel_utils.cpp
-	g++ $(KERNEL_FLAGS) -c kernel/src/kernel_utils.cpp -o kernel_utils.o
-
-kernel.bin: $(KERNEL_O_FILES)
-	g++ $(KERNEL_LINK_FLAGS) -o kernel.bin.o $(KERNEL_O_FILES)
-	objcopy -R .note -R .comment -S -O binary kernel.bin.o kernel.bin
-	
-filler.bin: kernel.bin
+filler.bin: kernel/kernel.bin micro_kernel/micro_kernel.bin bootloader/part1.bin bootloader/part2.bin bootloader/padding.bin
 	bash prepForLoading.sh
 	
-balecok.iso: bootloader.bin micro_kernel.bin kernel.bin filler.bin
-	cat bootloader.bin > balecok.bin
-	cat micro_kernel.bin >> balecok.bin
-	cat kernel.bin >> balecok.bin
+balecok.iso: filler.bin
+	cat bootloader/part1.bin > balecok.bin
+	cat bootloader/part2.bin >> balecok.bin
+	cat bootloader/padding.bin >> balecok.bin
+	cat micro_kernel/micro_kernel.bin >> balecok.bin
+	cat kernel/kernel.bin >> balecok.bin
+	cat filler.bin >> balecok.bin
 	dd status=noxfer conv=notrunc if=balecok.bin of=balecok.iso
 
-start-qemu: balecok.iso
-	qemu-system-x86_64 -fda balecok.iso
+start-qemu: default
+	qemu-system-x86_64 -fda balecok.iso -hda hdd.img -boot order=a
 
-start-bochs: balecok.iso
-	bochs -q -f .bochsConfig
+bochs: default
+	echo balecok.iso
+	bochs -qf .bochsConfig -rc commands
+	rm commands
+
+debug: default
+	echo "c" > commands
+	bochs -qf .bochsConfigDebug -rc commands
+	rm commands
 	
 devMicro: 
 	geany $(MICRO_KERNEL_SRC) $(MICRO_KERNEL_UTILS_SRC)
@@ -57,16 +46,16 @@ devBoot:
 	
 devEnv:
 	geany $(MICRO_KERNEL_SRC) $(MICRO_KERNEL_UTILS_SRC) bootloader/*.asm kernel/src/*.cpp
+
+force_look:
+	true
+	
+hdd.img:
+	dd if=/dev/zero of=hdd.img bs=516096c count=1000
+	(echo n; echo p; echo 1; echo ""; echo ""; echo t; echo c; echo a; echo 1; echo w;) | sudo fdisk -u -C1000 -S63 -H16 hdd.img
+
 clean:
-	rm -rf bootloader.bin
-	rm -rf balecok.bin
-	rm -rf kernel.bin
-	rm -rf balecok.iso
-	rm -rf kernel.o
-	rm -rf console.o
-	rm -rf kernel_utils.o
-	rm -rf keyboard.o
-	rm -rf kernel.bin.o
-	rm -rf kernel.bin
-	rm -rf micro_kernel.g
-	rm -rf micro_kernel.bin
+	cd bootloader; $(MAKE) clean
+	cd kernel; $(MAKE) clean
+	cd micro_kernel; $(MAKE) clean
+	rm -rf *.bin *.o *.g *.iso

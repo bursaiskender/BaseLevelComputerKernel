@@ -1,16 +1,77 @@
 [BITS 16]
 
-%ifndef DEBUG
 [ORG 0x1000]
-%endif
 
 jmp _start
+
+e820_mmap:
+    pusha
+
+    xor ax, ax
+    mov es, ax
+    mov di, e820_memory_map
+
+    xor ebx, ebx
+    xor bp, bp
+    mov edx, 0x0534D4150
+    mov eax, 0xe820
+    mov [es:di + 20], dword 1
+    mov ecx, 24
+    int 0x15
+    jc .failed
+
+    mov edx, 0x0534D4150
+    cmp eax, edx
+    jne .failed
+    jmp .jmpin
+
+    .e820lp:
+    mov eax, 0xE820
+    mov [es:di + 20], dword 1
+    mov ecx, 24
+    int 0x15
+    jc .e820f
+    mov edx, 0x0534D4150
+
+    .jmpin:
+    jcxz .skipent
+    cmp cl, 20
+    jbe .notext
+    test byte [es:di + 20], 1
+    je .skipent
+
+    .notext:
+    mov ecx, [es:di + 8]
+    or ecx, [es:di + 12]
+    jz .skipent
+    inc bp
+    add di, 24
+
+    .skipent:
+    test ebx, ebx
+    jne .e820lp
+
+    .e820f:
+    mov  [e820_entry_count], bp
+
+    clc
+    popa
+    ret
+
+    .failed:
+    stc
+    popa
+    ret
 
 _start:
     xor ax, ax
     mov ds, ax
 
     cli
+
+    call e820_mmap
+    setc al
+    mov [e820_failed], al
 
     lgdt [GDTR64]
 
@@ -27,7 +88,6 @@ _start:
 [BITS 32]
 
 pm_start:
-
     mov ax, DATA_SELECTOR-GDT64
     mov ds, ax
     mov es, ax
@@ -39,24 +99,25 @@ pm_start:
     or eax, 1 << 5
     mov cr4, eax
 
+
     mov edi, 0x70000
-    mov ecx, 0x10000
+    mov ecx, 4096
     xor eax, eax
     rep stosd
 
-    mov dword [0x70000], 0x71000 + 7    
-    mov dword [0x71000], 0x72000 + 7    
-    mov dword [0x72000], 0x73000 + 7    
+    mov dword [0x70000], 0x71000 + 3   ; PML4T[0] -> PDPT
+    mov dword [0x71000], 0x72000 + 3   ; PDPT[0] -> PDT
+    mov dword [0x72000], 0x73000 + 3   ; PDT[0] -> PT
 
-    mov edi, 0x73000                    
-    mov eax, 7
-    mov ecx, 256                        
+    mov edi, 0x73000 
+    mov ebx, 0x3     
+    mov ecx, 256    
 
-    make_page_entries:
-        stosd
-        add     edi, 4
-        add     eax, 0x1000
-        loop    make_page_entries
+    .write_entry:
+    mov dword [edi], ebx
+    add ebx, 0x1000  
+    add edi, 8       
+    loop .write_entry
 
     mov ecx, 0xC0000080
     rdmsr
@@ -66,6 +127,7 @@ pm_start:
     mov eax, 0x70000    
     mov cr3, eax        
 
+    ; Enable paging
     mov eax, cr0
     or eax, 10000000000000000000000000000000b
     mov cr0, eax
@@ -84,35 +146,32 @@ lm_start:
     call install_irqs
 
     call install_syscalls
-    
+
     sti
-    
-    call install_timer
 
     call 0x5000
 
     jmp $
 
-%include "micro_kernel/utils/macros.asm"
-%include "micro_kernel/utils/console.asm"
 
-%include 'micro_kernel/timer.asm'
-%include "micro_kernel/interrupts.asm"
-%include "micro_kernel/shell.asm"
+%include "utils/macros.asm"
+%include "utils/console.asm"
+
+%include "interrupts.asm"
 
 
 GDT64:
     NULL_SELECTOR:
         dq 0
 
-    CODE_SELECTOR:          
+    CODE_SELECTOR:         
         dw 0x0FFFF
         db 0x0, 0x0, 0x0
         db 10011010b
         db 11001111b
         db 0x0
 
-    DATA_SELECTOR:          
+    DATA_SELECTOR:         
         dw  0x0FFFF
         db  0x0, 0x0, 0x0
         db  10010010b
@@ -129,5 +188,14 @@ GDT64:
 GDTR64:
     dw 4 * 8 - 1 
     dd GDT64
+
+e820_failed:
+    db 0
+
+e820_entry_count:
+    dw 0
+
+e820_memory_map:
+    times 32 dq 0, 0, 0
 
    times 16384-($-$$) db 0

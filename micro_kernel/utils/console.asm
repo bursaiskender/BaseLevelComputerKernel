@@ -22,46 +22,6 @@ current_line dq 0
 current_column dq 0
 TRAM equ 0x0B8000
 VRAM equ 0x0A0000
-
-set_current_position:
-    push rax
-    push rbx
-    push rdx
-    
-    mov rax, [current_line]
-    mov rbx, 0x14 * 8
-    mul rbx
-
-    mov rbx, [current_column]
-    shl rbx, 1
-
-    lea rdi, [rax + rbx + TRAM]
-
-    pop rdx
-    pop rbx
-    pop rax
-
-    ret
-    
-print_normal:
-    push rbx
-    push rdx
-    push rdi
-
-    call set_current_position
-    mov rbx, r8
-    mov dl, STYLE(BLACK_F, WHITE_B)
-    call print_string
-
-    mov rbx, [current_column]
-    add rbx, r9
-    mov [current_column], rbx
-
-    pop rdi
-    pop rdx
-    pop rbx
-
-    ret
     
 print_string:
     push rax
@@ -85,25 +45,7 @@ print_string:
     pop rax
 
     ret
-    
-print_int_normal:
-    push rdi
-    push rdx
 
-    call set_current_position
-    mov dl, STYLE(BLACK_F, WHITE_B)
-    call print_int
-
-    call int_str_length
-    mov rbx, [current_column]
-    add rbx, rax
-    mov [current_column], rbx
-    
-    pop rdi
-    pop rdx
-
-    ret
-       
 print_int:
     push rax
     push rbx
@@ -133,9 +75,11 @@ print_int:
         je .exit
         dec rsi
 
+        ; write the char
         pop rax
         stosb
 
+        ; Write style code
         mov rdx, r10
         mov al, dl
         stosb
@@ -150,42 +94,3 @@ print_int:
         pop rax
 
         ret
-
-goto_next_line:
-    push rax
-    push rsi
-    push rdi
-
-    mov rax, [current_line]
-    inc rax
-    mov [current_line], rax
-
-    mov qword [current_column], 0
-
-    cmp rax, 25
-    jne .end
-
-    mov rsi, TRAM + 2 * 0x14 * 8
-    mov rdi, TRAM + 1 * 0x14 * 8
-
-    .scroll_up:
-
-    mov al, byte [rsi]
-    mov byte [rdi], al
-
-    inc rsi
-    inc rdi
-
-    cmp rdi, TRAM + 25 * 0x14 * 8
-    jne .scroll_up
-
-    mov rax, 24
-    mov [current_line], rax
-
-    .end:
-
-    pop rdi
-    pop rsi
-    pop rax
-
-    ret

@@ -31,23 +31,64 @@ STRING isr29_msg, "29: Reserved Exception "
 STRING isr30_msg, "30: Reserved Exception "
 STRING isr31_msg, "31: Reserved Exception "
 
+STRING cr2_str, "cr2: "
+STRING rsp_str, "rsp: "
+STRING error_code_str, "Error code: "
+STRING rip_str, "rip: "
 
 %macro CREATE_ISR 1
 _isr%1:
     cli
 
-    push r8
-    push r9
+    mov r10, [rsp]
+    mov r11, [rsp+8]
 
-    mov r8, isr%1_msg
-    mov r9, isr%1_msg_length
-    call print_normal
+    lea rdi, [12 * 8 * 0x14 + 30 * 2 + TRAM]
+    mov dl, STYLE(RED_F, WHITE_B)
+    mov rbx, isr%1_msg
+    call print_string
+
+    mov rax, %1
+    cmp rax, 14
+    jne .end
+
+    .page_fault_exception:
+
+    lea rdi, [13 * 8 * 0x14 + 30 * 2 + TRAM]
+    mov rbx, cr2_str
+    call print_string
+
+    lea rdi, [13 * 8 * 0x14 + 35 * 2 + TRAM]
+    mov r8, cr2
+    call print_int
+
+    lea rdi, [14 * 8 * 0x14 + 30 * 2 + TRAM]
+    mov rbx, rsp_str
+    call print_string
+
+    lea rdi, [14 * 8 * 0x14 + 35 * 2 + TRAM]
+    mov r8, rsp
+    call print_int
+
+    lea rdi, [15 * 8 * 0x14 + 30 * 2 + TRAM]
+    mov rbx, rip_str
+    call print_string
+
+    lea rdi, [15* 8 * 0x14 + 35 * 2 + TRAM]
+    mov r8, r11
+    call print_int
+
+    lea rdi, [16 * 8 * 0x14 + 30 * 2 + TRAM]
+    mov rbx, error_code_str
+    call print_string
+
+    lea rdi, [16 * 8 * 0x14 + 30 * 2 + TRAM + error_code_str_length * 2]
+    mov r8, r10
+    call print_int
+
+    .end:
 
     hlt
-
-    pop r9
-    pop r8
-
     iretq
 %endmacro
 
@@ -55,16 +96,39 @@ _isr%1:
 _irq%1:
     cli
 
-    mov rax, [irq_handlers + 8 *%1]
-    test rax, rax
+    push rax
 
+    mov rax, [irq_handlers + 8 *%1]
+
+    test rax, rax
     je .eoi
+
+    push rax
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    push r8
+    push r9
+    push r10
+    push r11
+
     call rax
+
+    pop r11
+    pop r10
+    pop r9
+    pop r8
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rax
 
     .eoi:
 
     mov rax, %1 
-    test rax, rax
+    cmp rax, 8
     jl .master
 
 
@@ -75,6 +139,8 @@ _irq%1:
 
     mov al, 0x20
     out 0x20, al
+
+    pop rax
 
     iretq
 %endmacro
@@ -152,7 +218,7 @@ install_isrs:
 remap_irqs:
     mov al, 0x11
     out 0x20, al 
-    out 0xA1, al 
+    out 0xA0, al 
 
     mov al, 0x20
     out 0x21, al 
@@ -168,7 +234,7 @@ remap_irqs:
     out 0x21, al 
     out 0xA1, al 
 
-    mov al, 0x00
+    mov al, 0x0
     out 0x21, al
     out 0xA1, al 
 
@@ -196,13 +262,23 @@ install_irqs:
 
 install_syscalls:
     IDT_SET_GATE 60, syscall_reboot, LONG_SELECTOR-GDT64, 0x8E
+    IDT_SET_GATE 61, syscall_irq, LONG_SELECTOR-GDT64, 0x8E
+    IDT_SET_GATE 62, syscall_mmap, LONG_SELECTOR-GDT64, 0x8E
+    
     ret
     
 register_irq_handler:
     mov [irq_handlers + r8 * 8], r9
 
     ret
+    
+syscall_irq:
+    cli
 
+    call register_irq_handler
+
+    iretq
+    
 syscall_reboot:
     cli
 
@@ -217,12 +293,36 @@ syscall_reboot:
     pop rax
 
     iretq
+
+syscall_mmap:
+    cli
+
+    .e820_failed:
+
+    cmp r8, 0
+    jne .entry_count
+
+    movzx rax, byte [e820_failed]
+    iretq
+
+    .entry_count:
+
+    cmp r8, 1
+    jne .e820_mmap
+
+    movzx rax, word [e820_entry_count]
+    iretq
+
+    .e820_mmap:
+
+    mov rax, e820_memory_map
+    iretq
     
 IDT64:
-    times 256 dq 0,0
+    times 128 dq 0,0
 
 IDTR64:
-    dw (256 * 16) - 1  ; Limit
+    dw (128 * 16) - 1  ; Limit
     dq IDT64           ; Base
 
 irq_handlers:
